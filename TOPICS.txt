@@ -1,0 +1,44 @@
+# GitHub Topics - Copy and paste these individually
+
+Add these topics ONE AT A TIME (GitHub is picky about format):
+
+nextjs
+typescript
+ecommerce
+mongodb
+stripe
+tailwindcss
+react
+fullstack
+shopping-cart
+payment-gateway
+nextauth
+authentication
+admin-dashboard
+coffee-shop
+portfolio-project
+vercel
+serverless
+rest-api
+responsive-design
+demo-mode
+
+---
+
+IMPORTANT NOTES:
+- "full-stack" changed to "fullstack" (no hyphen in middle is more common on GitHub)
+- Add ONE topic at a time, click "Done editing" between each
+- Do NOT paste all at once with commas
+- All topics are lowercase
+- All under 50 characters
+- Only use hyphens as shown
+
+If any still gives error, skip it and move to next.
+
+Most important topics (add these first):
+1. nextjs
+2. typescript
+3. ecommerce
+4. fullstack
+5. react
+6. mongodb

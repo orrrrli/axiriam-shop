@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Order from '@/lib/models/Order';
+import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 // GET single order
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -16,8 +16,15 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
-    const order = await Order.findById(params.id).populate('user', 'name email');
+    // await connectDB();
+    const order = await prisma.order.findUnique({
+      where: { id: params.id },
+      include: {
+        user: { select: { name: true, email: true } },
+        orderItems: true,
+        shippingAddress: true,
+      },
+    });
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -25,7 +32,7 @@ export async function GET(
 
     // Check if user owns the order or is admin
     if (
-      session.user?.id !== order.user._id.toString() &&
+      session.user?.id !== order.userId &&
       session.user?.role !== 'admin'
     ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -43,8 +50,9 @@ export async function GET(
 // PUT update order (Admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -52,11 +60,16 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
+    // await connectDB();
     const data = await req.json();
-    const order = await Order.findByIdAndUpdate(params.id, data, {
-      new: true,
-      runValidators: true,
+    const order = await prisma.order.update({
+      where: { id: params.id },
+      data: {
+        status: data.status,
+        isPaid: data.isPaid,
+        isDelivered: data.isDelivered,
+        deliveredAt: data.isDelivered ? new Date() : null,
+      },
     });
 
     if (!order) {

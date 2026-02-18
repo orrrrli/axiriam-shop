@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Product from '@/lib/models/Product';
+import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { mockProducts } from '@/lib/data/mockData';
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -25,7 +24,7 @@ export async function GET(req: NextRequest) {
 
       if (search) {
         const searchLower = search.toLowerCase();
-        products = products.filter(p => 
+        products = products.filter(p =>
           p.name.toLowerCase().includes(searchLower) ||
           p.description.toLowerCase().includes(searchLower)
         );
@@ -39,26 +38,30 @@ export async function GET(req: NextRequest) {
     }
 
     // NORMAL MODE: Use database
-    await connectDB();
 
-    let query: any = {};
+    // Build filter query
+    const where: any = {};
 
     if (category && category !== 'all') {
-      query.category = category;
+      where.category = category;
     }
 
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
       ];
     }
 
     if (featured === 'true') {
-      query.featured = true;
+      where.featured = true;
     }
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
+    const products = await prisma.product.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: { reviews: true }, // Include reviews if needed matching Mongoose embedded
+    });
 
     return NextResponse.json({ products }, { status: 200 });
   } catch (error: any) {
@@ -82,16 +85,23 @@ export async function POST(req: NextRequest) {
     // DEMO MODE: Return success without saving
     if (DEMO_MODE) {
       const data = await req.json();
-      return NextResponse.json({ 
-        product: { ...data, _id: 'demo-' + Date.now() },
+      return NextResponse.json({
+        product: { ...data, id: 'demo-' + Date.now() },
         message: 'Demo mode: Product not saved to database'
       }, { status: 201 });
     }
 
-    await connectDB();
-
     const data = await req.json();
-    const product = await Product.create(data);
+
+    // Ensure numeric types are correct
+    const productData = {
+      ...data,
+      price: parseFloat(data.price),
+    };
+
+    const product = await prisma.product.create({
+      data: productData,
+    });
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error: any) {

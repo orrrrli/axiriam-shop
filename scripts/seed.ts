@@ -1,9 +1,7 @@
-import mongoose from 'mongoose';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import Product from '../lib/models/Product';
-import User from '../lib/models/User';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bean-haven';
+const prisma = new PrismaClient();
 
 const products = [
   {
@@ -69,43 +67,54 @@ const products = [
 
 async function seed() {
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB');
-
+    console.log('Connecting to database...');
     // Clear existing data
-    await Product.deleteMany({});
-    await User.deleteMany({});
+    await prisma.review.deleteMany({});
+    await prisma.orderItem.deleteMany({});
+    await prisma.order.deleteMany({});
+    await prisma.product.deleteMany({});
+    await prisma.user.deleteMany({});
     console.log('Cleared existing data');
 
     // Create products
-    const createdProducts = await Product.insertMany(products);
-    console.log(`Created ${createdProducts.length} products`);
+    // Using createMany might be faster but create allows us to return the objects if needed, though insertMany returns them too.
+    // Prisma createMany is supported in Postgres.
+    await prisma.product.createMany({
+      data: products
+    });
+    console.log(`Created ${products.length} products`);
 
     // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 12);
-    await User.create({
-      name: 'Admin User',
-      email: 'admin@beanhavencafe.com',
-      password: hashedPassword,
-      role: 'admin',
+    await prisma.user.create({
+      data: {
+        name: 'Admin User',
+        email: 'admin@beanhavencafe.com',
+        password: hashedPassword,
+        role: 'admin',
+      }
     });
     console.log('Created admin user: admin@beanhavencafe.com / admin123');
 
     // Create test user
     const hashedUserPassword = await bcrypt.hash('user123', 12);
-    await User.create({
-      name: 'Test User',
-      email: 'user@beanhavencafe.com',
-      password: hashedUserPassword,
-      role: 'user',
+    await prisma.user.create({
+      data: {
+        name: 'Test User',
+        email: 'user@beanhavencafe.com',
+        password: hashedUserPassword,
+        role: 'user',
+      }
     });
     console.log('Created test user: user@beanhavencafe.com / user123');
 
-    console.log('\\n✅ Database seeded successfully!');
+    console.log('\n✅ Database seeded successfully!');
     process.exit(0);
   } catch (error) {
     console.error('Error seeding database:', error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

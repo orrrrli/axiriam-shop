@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Order from '@/lib/models/Order';
-import Product from '@/lib/models/Product';
-import User from '@/lib/models/User';
+import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { mockStats } from '@/lib/data/mockData';
 import { getDemoSession } from '@/lib/demoAuth';
 
@@ -15,7 +12,7 @@ export async function GET(req: NextRequest) {
     // DEMO MODE: Use mock stats
     if (DEMO_MODE) {
       const demoSession = getDemoSession();
-      
+
       if (!demoSession || demoSession.user.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
@@ -29,36 +26,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
-
     const [
       totalOrders,
       totalProducts,
       totalUsers,
+      totalRevenueData,
       recentOrders,
-      orderStats,
     ] = await Promise.all([
-      Order.countDocuments(),
-      Product.countDocuments(),
-      User.countDocuments(),
-      Order.find().sort({ createdAt: -1 }).limit(10).populate('user', 'name email'),
-      Order.aggregate([
-        {
-          $group: {
-            _id: null,
-            totalRevenue: { $sum: '$totalPrice' },
-            avgOrderValue: { $avg: '$totalPrice' },
-          },
-        },
-      ]),
+      prisma.order.count(),
+      prisma.product.count(),
+      prisma.user.count(),
+      prisma.order.aggregate({
+        _sum: { totalPrice: true },
+        _avg: { totalPrice: true },
+      }),
+      prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: { user: { select: { name: true, email: true } } },
+      }),
     ]);
 
     const stats = {
       totalOrders,
       totalProducts,
       totalUsers,
-      totalRevenue: orderStats[0]?.totalRevenue || 0,
-      avgOrderValue: orderStats[0]?.avgOrderValue || 0,
+      totalRevenue: totalRevenueData._sum.totalPrice || 0,
+      avgOrderValue: totalRevenueData._avg.totalPrice || 0,
       recentOrders,
     };
 

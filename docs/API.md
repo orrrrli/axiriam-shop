@@ -1,6 +1,6 @@
 # API Documentation
 
-Complete reference for all API endpoints in Bean Haven Café.
+Complete reference for all API endpoints
 
 ## Base URL
 
@@ -46,7 +46,7 @@ POST /api/auth/register
 {
   "message": "User created successfully",
   "user": {
-    "id": "507f1f77bcf86cd799439011",
+    "id": "cm0k....",
     "name": "John Doe",
     "email": "john@example.com"
   }
@@ -55,7 +55,7 @@ POST /api/auth/register
 
 **Errors:**
 - `400` - Validation error
-- `409` - User already exists
+- `400` - User already exists with this email
 - `500` - Server error
 
 ---
@@ -78,7 +78,7 @@ GET /api/products?category={category}&search={query}&featured={boolean}
 {
   "products": [
     {
-      "_id": "507f1f77bcf86cd799439011",
+      "id": "cm0k....",
       "name": "Classic Flight",
       "description": "Our signature blend with notes of chocolate and caramel",
       "price": 3.99,
@@ -105,15 +105,18 @@ GET /api/products/{id}
 ```json
 {
   "product": {
-    "_id": "507f1f77bcf86cd799439011",
+    "id": "cm0k....",
     "name": "Classic Flight",
     "reviews": [
       {
-        "user": "607f1f77bcf86cd799439012",
-        "userName": "Sarah Johnson",
+        "id": "cm0k....",
         "rating": 5,
         "comment": "Amazing coffee!",
-        "createdAt": "2024-01-15T00:00:00.000Z"
+        "createdAt": "2024-01-15T00:00:00.000Z",
+        "user": {
+           "name": "Sarah Johnson",
+           "image": null
+        }
       }
     ]
     // ... other product fields
@@ -179,32 +182,23 @@ Authorization: Required
 {
   "orders": [
     {
-      "_id": "607f1f77bcf86cd799439015",
+      "id": "cm0k....",
       "user": {
-        "_id": "507f1f77bcf86cd799439012",
         "name": "John Doe",
         "email": "john@example.com"
       },
-      "items": [
+      "orderItems": [
         {
-          "product": "507f1f77bcf86cd799439011",
-          "productName": "Classic Flight",
+          "productId": "cm0k....",
+          "name": "Classic Flight",
           "quantity": 2,
           "price": 3.99
         }
       ],
-      "shippingAddress": {
-        "fullName": "John Doe",
-        "address": "123 Main St",
-        "city": "Seattle",
-        "postalCode": "98101",
-        "country": "USA",
-        "phone": "(555) 123-4567"
-      },
-      "status": "processing",
+      "shippingAddress": null, // or object if included
+      "status": "pending",
       "totalPrice": 14.01,
-      "isPaid": true,
-      "trackingNumber": "WC2024020512345",
+      "isPaid": false,
       "createdAt": "2024-02-05T00:00:00.000Z"
     }
   ]
@@ -223,8 +217,8 @@ Authorization: Required
 {
   "items": [
     {
-      "product": "507f1f77bcf86cd799439011",
-      "productName": "Classic Flight",
+      "product": "product_id_here",
+      "productName": "Classic Flight", 
       "quantity": 2,
       "price": 3.99
     }
@@ -241,7 +235,8 @@ Authorization: Required
   "itemsPrice": 7.98,
   "taxPrice": 0.64,
   "shippingPrice": 5.99,
-  "totalPrice": 14.61
+  "totalPrice": 14.61,
+  "isPaid": false // optional, defaults to false
 }
 ```
 
@@ -261,7 +256,7 @@ Authorization: Required
 **Request Body:**
 ```json
 {
-  "productId": "507f1f77bcf86cd799439011",
+  "productId": "product_id_here",
   "rating": 5,
   "comment": "Excellent coffee! Rich and smooth."
 }

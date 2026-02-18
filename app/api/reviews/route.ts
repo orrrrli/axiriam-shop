@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Product from '@/lib/models/Product';
+import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 // POST create review
+// Refactored to use Prisma
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,9 +13,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
+    const data = await req.json();
 
-    const { productId, rating, comment } = await req.json();
+    const productId = data.productId;
+    const rating = data.rating;
+    const comment = data.comment;
 
     if (!productId || !rating || !comment) {
       return NextResponse.json(
@@ -31,7 +33,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const product = await Product.findById(productId);
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
 
     if (!product) {
       return NextResponse.json(
@@ -41,9 +45,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if user already reviewed this product
-    const existingReview = product.reviews.find(
-      (review: any) => review.user.toString() === session.user?.id
-    );
+    const existingReview = await prisma.review.findFirst({
+      where: {
+        productId: productId,
+        userId: session.user?.id,
+      },
+    });
 
     if (existingReview) {
       return NextResponse.json(
@@ -52,18 +59,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    product.reviews.push({
-      user: session.user?.id,
-      userName: session.user?.name || 'Anonymous',
-      rating,
-      comment,
-      createdAt: new Date(),
+    // Create review
+    await prisma.review.create({
+      data: {
+        rating,
+        comment,
+        userId: session.user?.id as string,
+        productId: productId,
+      },
     });
 
-    await product.save();
+    // Update product stats
+    // We can use aggregation to fetch the new stats
+    const aggregations = await prisma.review.aggregate({
+      where: { productId: productId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        averageRating: aggregations._avg.rating || 0,
+        totalReviews: aggregations._count.rating || 0,
+      },
+      include: {
+        reviews: {
+          include: {
+            user: { select: { name: true, image: true } }
+          }
+        }
+      }
+    });
 
     return NextResponse.json(
-      { message: 'Review added successfully', product },
+      { message: 'Review added successfully', product: updatedProduct },
       { status: 201 }
     );
   } catch (error) {

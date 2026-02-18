@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Order from '@/lib/models/Order';
+import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
 import { generateOrderNumber, generateTrackingNumber } from '@/lib/utils/helpers';
 import { mockOrders } from '@/lib/data/mockData';
@@ -16,7 +15,7 @@ export async function GET(req: NextRequest) {
     // DEMO MODE: Use mock data
     if (DEMO_MODE) {
       const demoSession = getDemoSession();
-      
+
       if (!demoSession) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
@@ -25,7 +24,7 @@ export async function GET(req: NextRequest) {
 
       if (demoSession.user.role !== 'admin') {
         // Regular users see only their orders
-        orders = orders.filter(o => o.user._id === demoSession.user.id);
+        orders = orders.filter(o => o.user._id === demoSession.user.id || (o.user as any) === demoSession.user.id);
       }
 
       return NextResponse.json({ orders }, { status: 200 });
@@ -37,26 +36,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
+    // await connectDB();
 
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    let query: any = {};
+    let where: any = {};
 
     if (session.user?.role === 'admin') {
       // Admin can see all orders or filter by userId
       if (userId) {
-        query.user = userId;
+        where.userId = userId;
       }
     } else {
       // Regular users can only see their own orders
-      query.user = session.user?.id;
+      where.userId = session.user?.id;
     }
 
-    const orders = await Order.find(query)
-      .sort({ createdAt: -1 })
-      .populate('user', 'name email');
+    const orders = await prisma.order.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true, email: true } },
+        orderItems: true,
+      },
+    });
 
     return NextResponse.json({ orders }, { status: 200 });
   } catch (error) {
@@ -74,7 +78,7 @@ export async function POST(req: NextRequest) {
     // DEMO MODE: Return mock order
     if (DEMO_MODE) {
       const demoSession = getDemoSession();
-      
+
       if (!demoSession) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
@@ -90,7 +94,7 @@ export async function POST(req: NextRequest) {
         updatedAt: new Date(),
       };
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         order: mockOrder,
         message: 'Demo mode: Order created (not saved to database)'
       }, { status: 201 });
@@ -102,23 +106,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectDB();
+    // await connectDB();
 
     const data = await req.json();
-    
-    const orderNumber = generateOrderNumber();
-    
-    const order = await Order.create({
-      ...data,
-      user: session.user?.id,
-      status: 'pending',
+
+    // const orderNumber = generateOrderNumber(); // Not used in Schema currently but could be added
+
+    // Prepare items for Prisma (mapping from request structure to database structure)
+    const orderItemsData = data.items.map((item: any) => ({
+      name: item.productName || item.name, // Handle potentially different field names
+      quantity: item.quantity,
+      price: item.price,
+      productId: item.product,
+    }));
+
+    // Extract shipping address
+    const { shippingAddress, ...orderData } = data;
+
+    const order = await prisma.order.create({
+      data: {
+        userId: session.user?.id as string,
+        paymentMethod: orderData.paymentMethod,
+        itemsPrice: orderData.itemsPrice,
+        taxPrice: orderData.taxPrice,
+        shippingPrice: orderData.shippingPrice,
+        totalPrice: orderData.totalPrice,
+        status: 'pending',
+        isPaid: orderData.isPaid || false,
+        orderItems: {
+          create: orderItemsData,
+        },
+        shippingAddress: {
+          create: shippingAddress,
+        },
+      },
+      include: {
+        orderItems: true,
+        shippingAddress: true,
+      }
     });
 
     // Send confirmation email
     try {
       await sendOrderConfirmationEmail(session.user?.email || '', {
-        orderId: order._id.toString(),
-        items: order.items,
+        orderId: order.id,
+        items: order.orderItems,
         total: order.totalPrice,
         shippingAddress: order.shippingAddress,
       });

@@ -2,52 +2,233 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   BASE STYLES
+   Inspired by ecommerce-react design system
+   ============================================ */
+
 @layer base {
-  body {
-    @apply bg-cream-50 text-brown-900;
+  html {
+    font-size: 62.5%; /* 1rem = 10px for easier rem calculations */
   }
+
+  body {
+    @apply bg-body text-paragraph font-sans font-bold antialiased overflow-x-hidden;
+    font-size: 1.6rem;
+    min-height: 100vh;
+    line-height: 2.4rem;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-heading font-sans;
+  }
+
+  p {
+    @apply text-paragraph;
+    line-height: 2.4rem;
+  }
+
+  span {
+    @apply text-paragraph relative;
+    font-size: 1.2rem;
+  }
+
+  button:hover {
+    @apply cursor-pointer;
+  }
+
+  button:focus {
+    @apply outline-none;
+  }
+
+  strong {
+    @apply font-bold;
+  }
+
+  /* Reset rem-based sizes for Tailwind compatibility */
+  /* Since html is 62.5%, we keep Tailwind's rem system working 
+     by using explicit font-size values in components */
 }
 
+/* ============================================
+   COMPONENT CLASSES
+   ============================================ */
+
 @layer components {
-  .btn {
-    @apply px-6 py-3 rounded-lg font-medium transition-all duration-300 inline-flex items-center justify-center;
+  /* --- Buttons --- */
+  .button {
+    @apply bg-primary text-white font-bold relative flex items-center justify-center
+           border border-primary transition-all duration-300 ease-bezier;
+    padding: 1.6rem;
   }
-  
-  .btn-primary {
-    @apply bg-brown-600 text-white hover:bg-brown-700 active:scale-95;
+
+  .button:hover {
+    @apply bg-primary-hover border-primary-hover cursor-pointer no-underline;
   }
-  
-  .btn-secondary {
-    @apply bg-cream-500 text-brown-900 hover:bg-cream-600 active:scale-95;
+
+  .button:disabled {
+    @apply opacity-50 cursor-not-allowed;
   }
-  
-  .btn-outline {
-    @apply border-2 border-brown-600 text-brown-600 hover:bg-brown-600 hover:text-white active:scale-95;
+
+  .button-link {
+    @apply button bg-transparent text-black border-none;
   }
-  
-  .btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700 active:scale-95;
+
+  .button-link:hover {
+    @apply bg-transparent border-none;
   }
-  
+
+  .button-muted {
+    @apply button bg-body-alt border-border;
+    color: #7a7a7a;
+  }
+
+  .button-muted:hover {
+    @apply bg-body border-border-focus;
+  }
+
+  .button-block {
+    @apply block w-full;
+  }
+
+  .button-border {
+    @apply bg-transparent border border-primary text-primary;
+  }
+
+  .button-border:hover {
+    @apply bg-border border-primary;
+  }
+
+  .button-danger {
+    @apply bg-red-600 text-white;
+  }
+
+  .button-danger:hover {
+    @apply bg-red-700;
+  }
+
+  .button-border-gray {
+    @apply border border-border text-paragraph;
+  }
+
+  .button-border-gray:hover {
+    @apply border-border bg-border;
+  }
+
+  .button-small {
+    font-size: 1.2rem;
+    padding: 1.2rem 1.6rem;
+  }
+
+  .button-icon {
+    @apply flex items-center text-center;
+  }
+
+  .button-icon * {
+    font-size: inherit;
+  }
+
+  /* --- Inputs --- */
   .input {
-    @apply w-full px-4 py-2 border border-brown-200 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent outline-none transition;
+    @apply w-full border border-border outline-none transition-all duration-300;
+    padding: 1.2rem 1.6rem;
+    font-size: 1.4rem;
   }
-  
+
+  .input:focus {
+    @apply border-border-focus;
+  }
+
+  /* --- Cards --- */
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-surface p-6;
   }
-  
+
+  /* --- Content wrapper --- */
+  .content {
+    @apply w-full relative flex animate-fade-in;
+    min-height: 100vh;
+    padding: 10rem;
+  }
+
+  @media (max-width: 480px) {
+    .content {
+      padding: 5rem 1.6rem;
+      flex-direction: column;
+    }
+  }
+
+  /* --- Content admin wrapper --- */
+  .content-admin {
+    @apply w-full fixed top-0 left-0 relative flex overflow-hidden;
+    height: 100vh;
+    padding-top: 5.6rem;
+  }
+
+  .content-admin-wrapper {
+    @apply flex-grow relative animate-fade-in;
+    overflow-y: scroll;
+    padding: 1.6rem 0;
+    padding-top: 0;
+  }
+
+  /* --- Section padding --- */
   .section-padding {
     @apply py-16 md:py-24;
   }
-  
+
   .container-padding {
     @apply px-4 sm:px-6 lg:px-8;
   }
 }
 
+/* ============================================
+   STATE CLASSES
+   ============================================ */
+
+.is-basket-open {
+  overflow-y: hidden;
+}
+
+.is-basket-open .basket {
+  transform: translateX(0);
+}
+
+.is-img-loading {
+  opacity: 0;
+}
+
+.is-img-loaded {
+  animation: fadeIn 0.3s ease;
+  opacity: 1;
+}
+
+.is-open-recent-search .searchbar-recent {
+  display: flex;
+  flex-direction: column;
+}
+
+.is-nav-scrolled {
+  position: fixed;
+  animation: slideDown 0.3s ease 1;
+  animation-fill-mode: forwards;
+  top: 0;
+  height: 6rem;
+  padding-top: 0.5rem;
+  background: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.02);
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .transition-bezier {
+    transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
   }
 }

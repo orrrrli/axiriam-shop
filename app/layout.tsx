@@ -1,22 +1,20 @@
 import type { Metadata } from 'next';
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Tajawal } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import ToastProvider from '@/components/providers/ToastProvider';
+import { BasketProvider } from '@/components/providers/BasketProvider';
+import BasketDrawer from '@/components/BasketDrawer';
 
-const inter = Inter({ 
+const tajawal = Tajawal({
   subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
+  weight: ['200', '300', '400', '500', '700', '800', '900'],
+  variable: '--font-tajawal',
 });
 
 export const metadata: Metadata = {
-  title: 'Bean Haven Café | Premium Coffee & Pastries',
-  description: 'Your cozy neighborhood coffee shop serving premium beans, artisan pastries, and warm hospitality.',
+  title: 'Axiriam | Gorros Quirúrgicos',
+  description: 'Gorros quirúrgicos de alta calidad con diseños únicos para profesionales de la salud.',
 };
 
 export default function RootLayout({
@@ -25,11 +23,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+    <html lang="es">
+      <body className={`${tajawal.variable} font-sans`}>
         <AuthProvider>
-          <ToastProvider />
-          {children}
+          <BasketProvider>
+            <ToastProvider />
+            {children}
+            <BasketDrawer />
+          </BasketProvider>
         </AuthProvider>
       </body>
     </html>

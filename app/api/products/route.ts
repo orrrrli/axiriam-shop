@@ -6,13 +6,18 @@ import { mockProducts } from '@/lib/data/mockData';
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
-// GET all products with optional filtering
+// GET all products with optional filtering, sorting, and pagination
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
+    const sortBy = searchParams.get('sortBy');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const limit = searchParams.get('limit');
+    const offset = searchParams.get('offset');
 
     // DEMO MODE: Use mock data
     if (DEMO_MODE) {
@@ -34,7 +39,43 @@ export async function GET(req: NextRequest) {
         products = products.filter(p => p.featured);
       }
 
-      return NextResponse.json({ products }, { status: 200 });
+      if (minPrice) {
+        products = products.filter(p => p.price >= parseFloat(minPrice));
+      }
+
+      if (maxPrice) {
+        products = products.filter(p => p.price <= parseFloat(maxPrice));
+      }
+
+      // Sort
+      if (sortBy) {
+        switch (sortBy) {
+          case 'name-asc':
+            products.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+          case 'name-desc':
+            products.sort((a, b) => b.name.localeCompare(a.name));
+            break;
+          case 'price-asc':
+            products.sort((a, b) => a.price - b.price);
+            break;
+          case 'price-desc':
+            products.sort((a, b) => b.price - a.price);
+            break;
+        }
+      }
+
+      const total = products.length;
+
+      // Pagination
+      if (offset) {
+        products = products.slice(parseInt(offset));
+      }
+      if (limit) {
+        products = products.slice(0, parseInt(limit));
+      }
+
+      return NextResponse.json({ products, total }, { status: 200 });
     }
 
     // NORMAL MODE: Use database
@@ -57,13 +98,43 @@ export async function GET(req: NextRequest) {
       where.featured = true;
     }
 
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) where.price.gte = parseFloat(minPrice);
+      if (maxPrice) where.price.lte = parseFloat(maxPrice);
+    }
+
+    // Build sort
+    let orderBy: any = { createdAt: 'desc' };
+    if (sortBy) {
+      switch (sortBy) {
+        case 'name-asc':
+          orderBy = { name: 'asc' };
+          break;
+        case 'name-desc':
+          orderBy = { name: 'desc' };
+          break;
+        case 'price-asc':
+          orderBy = { price: 'asc' };
+          break;
+        case 'price-desc':
+          orderBy = { price: 'desc' };
+          break;
+      }
+    }
+
+    // Get total count for pagination
+    const total = await prisma.product.count({ where });
+
     const products = await prisma.product.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
-      include: { reviews: true }, // Include reviews if needed matching Mongoose embedded
+      orderBy,
+      include: { reviews: true },
+      ...(limit ? { take: parseInt(limit) } : {}),
+      ...(offset ? { skip: parseInt(offset) } : {}),
     });
 
-    return NextResponse.json({ products }, { status: 200 });
+    return NextResponse.json({ products, total }, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching products:', error);
     return NextResponse.json(

@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -12,6 +9,8 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+// ─── ECOMMERCE ────────────────────────────────────────────
 
 enum Role {
   user
@@ -28,26 +27,26 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders    Order[]
-  reviews   Review[]
+  orders  Order[]
+  reviews Review[]
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  price       Float
-  image       String
-  category    String
-  inStock     Boolean  @default(true)
-  featured    Boolean  @default(false)
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  price         Float
+  image         String
+  category      String
+  inStock       Boolean  @default(true)
+  featured      Boolean  @default(false)
   averageRating Float    @default(0)
   totalReviews  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  reviews     Review[]
-  orderItems  OrderItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviews    Review[]
+  orderItems OrderItem[]
 }
 
 model Review {
@@ -56,57 +55,307 @@ model Review {
   comment   String
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
   userId    String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
   productId String
 }
 
 model Order {
-  id              String   @id @default(cuid())
-  paymentMethod   String
-  paymentResult   Json?
-  itemsPrice      Float
-  taxPrice        Float
-  shippingPrice   Float
-  totalPrice      Float
-  isPaid          Boolean  @default(false)
-  paidAt          DateTime?
-  isDelivered     Boolean  @default(false)
-  deliveredAt     DateTime?
-  status          String   @default("pending")
-  trackingNumber  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid())
+  paymentMethod  String
+  paymentResult  Json?
+  itemsPrice     Float
+  taxPrice       Float
+  shippingPrice  Float
+  totalPrice     Float
+  isPaid         Boolean   @default(false)
+  paidAt         DateTime?
+  isDelivered    Boolean   @default(false)
+  deliveredAt    DateTime?
+  status         String    @default("pending")
+  trackingNumber String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  user            User     @relation(fields: [userId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
   userId          String
-  
   orderItems      OrderItem[]
   shippingAddress ShippingAddress?
 }
 
 model OrderItem {
-  id          String   @id @default(cuid())
-  name        String
-  quantity    Int
-  price       Float
-  
-  order       Order    @relation(fields: [orderId], references: [id])
-  orderId     String
-  product     Product  @relation(fields: [productId], references: [id])
-  productId   String
+  id       String @id @default(cuid())
+  name     String
+  quantity Int
+  price    Float
+
+  order     Order   @relation(fields: [orderId], references: [id])
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
 }
 
 model ShippingAddress {
-  id          String   @id @default(cuid())
-  fullName    String
-  address     String
-  city        String
-  postalCode  String
-  country     String
-  phone       String
-  
-  order       Order    @relation(fields: [orderId], references: [id])
-  orderId     String   @unique
+  id         String @id @default(cuid())
+  fullName   String
+  address    String
+  city       String
+  postalCode String
+  country    String
+  phone      String
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @unique
+}
+
+// ─── INVENTARIO ───────────────────────────────────────────
+
+enum MaterialType {
+  algodon
+  normal
+  microfibra
+  stretch
+  satin
+  stretch_antifluido
+  microfibra_antifluido
+}
+
+// ─── ITEMS ────────────────────────────────────────────────
+
+enum InventoryItemCategory {
+  sencillo
+  doble_vista
+  completo
+}
+
+model InventoryItem {
+  id          String                @id @default(cuid())
+  name        String
+  category    InventoryItemCategory
+  type        MaterialType
+  description String
+  quantity    Int
+  price       Float
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  materials  InventoryItemMaterial[]
+  saleItems  SaleItem[]
+  quoteItems QuoteItem[]
+}
+
+model InventoryItemMaterial {
+  id            String        @id @default(cuid())
+  item          InventoryItem @relation(fields: [itemId], references: [id])
+  itemId        String
+  rawMaterial   RawMaterial   @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId String
+}
+
+// ─── DISEÑOS ──────────────────────────────────────────────
+
+model RawMaterial {
+  id          String       @id @default(cuid())
+  name        String
+  description String
+  type        MaterialType
+  width       Float
+  height      Float
+  quantity    Int
+  price       Float
+  supplier    String
+  imageUrl    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  itemMaterials InventoryItemMaterial[]
+  orderDesigns  OrderMaterialDesign[]
+}
+
+// ─── PEDIDOS ──────────────────────────────────────────────
+
+enum OrderMaterialStatus {
+  pending
+  ordered
+  received
+}
+
+enum ParcelService {
+  Estafeta
+  DHL
+}
+
+model OrderMaterial {
+  id             String              @id @default(cuid())
+  distributor    String
+  description    String
+  status         OrderMaterialStatus @default(pending)
+  trackingNumber String?
+  parcelService  ParcelService?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  groups OrderMaterialGroup[]
+}
+
+model OrderMaterialGroup {
+  id              String        @id @default(cuid())
+  orderMaterial   OrderMaterial @relation(fields: [orderMaterialId], references: [id])
+  orderMaterialId String
+
+  designs OrderMaterialDesign[]
+}
+
+model OrderMaterialDesign {
+  id               String             @id @default(cuid())
+  group            OrderMaterialGroup @relation(fields: [groupId], references: [id])
+  groupId          String
+  rawMaterial      RawMaterial?       @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId    String?
+  quantity         Float
+  addToInventory   Boolean            @default(false)
+  customDesignName String?
+  type             MaterialType?
+}
+
+// ─── ENVIOS ───────────────────────────────────────────────
+
+enum SaleStatus {
+  pending
+  shipped
+  delivered
+}
+
+enum SocialMediaPlatform {
+  facebook
+  instagram
+  whatsapp
+}
+
+enum ShippingType {
+  local
+  nacional
+}
+
+enum LocalShippingOption {
+  meeting_point
+  pzexpress
+}
+
+enum NationalShippingCarrier {
+  estafeta
+  dhl
+  fedex
+  correos
+}
+
+model Sale {
+  id                      String                   @id @default(cuid())
+  name                    String
+  status                  SaleStatus               @default(pending)
+  socialMediaPlatform     SocialMediaPlatform
+  socialMediaUsername     String
+  saleRef                 String                   @unique @default(cuid())
+  trackingNumber          String?
+  invoiceRequired         Boolean                  @default(false)
+  shippingType            ShippingType
+  localShippingOption     LocalShippingOption?
+  localAddress            String?
+  nationalShippingCarrier NationalShippingCarrier?
+  shippingDescription     String?
+  discount                Float                    @default(0)
+  totalAmount             Float
+  deliveryDate            DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+
+  saleItems SaleItem[]
+  extras    SaleExtra[]
+}
+
+model SaleItem {
+  id               String         @id @default(cuid())
+  sale             Sale           @relation(fields: [saleId], references: [id])
+  saleId           String
+  item             InventoryItem? @relation(fields: [itemId], references: [id])
+  itemId           String?
+  quantity         Int
+  addToInventory   Boolean        @default(false)
+  customDesignName String?
+}
+
+model SaleExtra {
+  id          String @id @default(cuid())
+  description String
+  price       Float
+  quantity    Int?
+  discount    Float?
+  sale        Sale   @relation(fields: [saleId], references: [id])
+  saleId      String
+}
+
+// ─── COTIZACIONES ─────────────────────────────────────────
+
+enum QuoteStatus {
+  draft
+  sent
+  accepted
+  rejected
+  expired
+}
+
+enum PaymentMethod {
+  Efectivo
+  Tarjeta_credito
+  Transferencia
+  Deposito
+}
+
+model Quote {
+  id            String        @id @default(cuid())
+  quoteNumber   String        @unique
+  clientName    String
+  clientEmail   String?
+  clientPhone   String?
+  clientCompany String?
+  status        QuoteStatus   @default(draft)
+  validUntil    DateTime
+  subtotal      Float
+  discount      Float         @default(0)
+  totalAmount   Float
+  notes         String?
+  iva           Int
+  includingIva  Boolean       @default(false)
+  paymentMethod PaymentMethod
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items  QuoteItem[]
+  extras QuoteExtra[]
+}
+
+model QuoteItem {
+  id             String         @id @default(cuid())
+  quote          Quote          @relation(fields: [quoteId], references: [id])
+  quoteId        String
+  item           InventoryItem? @relation(fields: [itemId], references: [id])
+  itemId         String?
+  quantity       Int
+  unitPrice      Float
+  description    String?
+  discount       Float?
+  manualName     String?
+  manualCategory String?
+  manualType     String?
+}
+
+model QuoteExtra {
+  id          String @id @default(cuid())
+  description String
+  price       Float
+  quantity    Int?
+  discount    Float?
+  quote       Quote  @relation(fields: [quoteId], references: [id])
+  quoteId     String
 }

@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Navbar from '@/components/Navbar';
 import { DollarSign, ShoppingBag, Users, Package, Loader2, Clock } from 'lucide-react';
 import { formatPrice } from '@/lib/utils/helpers';
 
@@ -35,11 +34,8 @@ export default function AdminDashboard() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="content-admin">
-        <Navbar />
-        <div className="content-admin-wrapper flex items-center justify-center">
-          <Loader2 className="w-[3rem] h-[3rem] animate-spin text-heading" />
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-[3rem] h-[3rem] animate-spin text-heading" />
       </div>
     );
   }
@@ -68,10 +64,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="content-admin">
-      <Navbar />
-      <div className="content-admin-wrapper">
-        <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
+    <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
           {/* Header */}
           <div className="mb-[3rem]">
             <h1 className="text-heading text-[2.4rem]">Admin Dashboard</h1>
@@ -175,8 +168,7 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
-        </div>
-      </div>
     </div>
   );
 }
+

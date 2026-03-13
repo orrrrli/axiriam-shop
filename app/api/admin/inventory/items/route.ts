@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
-import { toDbMaterialType, toDbCategory, fromDbMaterialType, fromDbCategory } from '@/lib/utils/inventory';
+import { getItems, createItem } from '@/lib/services/inventory.service';
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -12,25 +11,8 @@ async function requireAdmin() {
 
 export async function GET() {
   try {
-    if (!await requireAdmin()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const items = await prisma.inventoryItem.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        materials: { select: { rawMaterialId: true } },
-      },
-    });
-
-    const formatted = items.map((item) => ({
-      ...item,
-      category: fromDbCategory(item.category),
-      type: fromDbMaterialType(item.type),
-      materials: item.materials.map((m) => m.rawMaterialId),
-    }));
-
-    return NextResponse.json({ items: formatted });
+    if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ items: await getItems() });
   } catch (error) {
     console.error('GET /api/admin/inventory/items:', error);
     return NextResponse.json({ error: 'Failed to fetch items' }, { status: 500 });
@@ -39,36 +21,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!await requireAdmin()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await req.json();
-    const { name, category, type, description, quantity, price, materials = [] } = body;
-
-    const item = await prisma.inventoryItem.create({
-      data: {
-        name,
-        category: toDbCategory(category) as any,
-        type: toDbMaterialType(type) as any,
-        description,
-        quantity,
-        price,
-        materials: {
-          create: materials.map((rawMaterialId: string) => ({ rawMaterialId })),
-        },
-      },
-      include: { materials: { select: { rawMaterialId: true } } },
-    });
-
-    return NextResponse.json({
-      item: {
-        ...item,
-        category: fromDbCategory(item.category),
-        type: fromDbMaterialType(item.type),
-        materials: item.materials.map((m) => m.rawMaterialId),
-      },
-    }, { status: 201 });
+    if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ item: await createItem(await req.json()) }, { status: 201 });
   } catch (error) {
     console.error('POST /api/admin/inventory/items:', error);
     return NextResponse.json({ error: 'Failed to create item' }, { status: 500 });

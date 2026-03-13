@@ -2,42 +2,32 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Pencil, Trash2, Loader2, Palette } from 'lucide-react';
+import { Plus, Palette } from 'lucide-react';
 import { RawMaterial, RawMaterialFormData } from '@/types/inventory';
-
-const TYPE_LABELS: Record<string, string> = {
-  algodon: 'Algodón',
-  normal: 'Normal',
-  stretch: 'Stretch',
-  satin: 'Satín',
-  'stretch-antifluido': 'Stretch Antifluido',
-  'microfibra-antifluido': 'Microfibra Antifluido',
-};
-
-const emptyForm: RawMaterialFormData = {
-  name: '',
-  description: '',
-  type: 'normal',
-  width: 0,
-  height: 0,
-  quantity: 0,
-  price: 0,
-  supplier: '',
-  imageUrl: '',
-};
+import { TELA_TYPE_LABELS, EMPTY_TELA_FORM } from '@/lib/constants/admin/telas.constants';
+import { createTela, updateTela, deleteTela } from '@/lib/services/admin/telas.service';
+import {
+  Modal,
+  DataTable,
+  FormField,
+  FormInput,
+  FormTextarea,
+  FormSelect,
+  FormNumberInput,
+} from '@/components/admin/common';
 
 export default function DesignsView({ initialDesigns }: { initialDesigns: RawMaterial[] }) {
   const router = useRouter();
   const [items, setItems] = useState(initialDesigns);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<RawMaterial | null>(null);
-  const [form, setForm] = useState<RawMaterialFormData>(emptyForm);
+  const [form, setForm] = useState<RawMaterialFormData>(EMPTY_TELA_FORM);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function openCreate() {
     setEditingItem(null);
-    setForm(emptyForm);
+    setForm(EMPTY_TELA_FORM);
     setModalOpen(true);
   }
 
@@ -60,17 +50,15 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
   async function handleSave() {
     setSaving(true);
     try {
-      const url = editingItem
-        ? `/api/admin/inventory/telas/${editingItem.id}`
-        : '/api/admin/inventory/telas';
-      const res = await fetch(url, {
-        method: editingItem ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
+      const result = editingItem
+        ? await updateTela(editingItem.id, form)
+        : await createTela(form);
+
+      if (result.success) {
         setModalOpen(false);
         router.refresh();
+      } else {
+        alert(result.error);
       }
     } finally {
       setSaving(false);
@@ -81,14 +69,38 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
     if (!confirm('¿Eliminar esta tela?')) return;
     setDeletingId(id);
     try {
-      await fetch(`/api/admin/inventory/telas/${id}`, { method: 'DELETE' });
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      const result = await deleteTela(id);
+      if (result.success) {
+        setItems((prev) => prev.filter((i) => i.id !== id));
+      } else {
+        alert(result.error);
+      }
     } finally {
       setDeletingId(null);
     }
   }
 
-  const COLUMNS = ['Nombre', 'Tipo', 'Ancho (m)', 'Alto (m)', 'Stock', 'Precio', 'Proveedor', 'Acciones'];
+  const columns = [
+    { 
+      header: 'Nombre', 
+      key: 'name', 
+      render: (value: string) => <span className="font-bold text-heading">{value}</span> 
+    },
+    { 
+      header: 'Tipo', 
+      key: 'type', 
+      render: (value: string) => TELA_TYPE_LABELS[value] ?? value 
+    },
+    { header: 'Ancho (m)', key: 'width' },
+    { header: 'Alto (m)', key: 'height' },
+    { header: 'Stock', key: 'quantity' },
+    { 
+      header: 'Precio', 
+      key: 'price', 
+      render: (value: number) => <span className="font-bold text-heading">${value.toFixed(2)}</span> 
+    },
+    { header: 'Proveedor', key: 'supplier' },
+  ];
 
   return (
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
@@ -102,208 +114,124 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
         </button>
       </div>
 
-      <div className="bg-white border border-border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-body-alt">
-                {COLUMNS.map((h) => (
-                  <th key={h} className="text-left py-[1.2rem] px-[2rem] text-[1.2rem] text-subtle font-bold uppercase tracking-wide">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={COLUMNS.length} className="py-[6rem] text-center text-subtle text-[1.4rem]">
-                    <Palette className="w-[3rem] h-[3rem] mx-auto mb-[1rem] opacity-30" />
-                    No hay telas registradas
-                  </td>
-                </tr>
-              )}
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-border last:border-b-0 hover:bg-body transition-colors duration-200">
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-heading font-bold">{item.name}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{TYPE_LABELS[item.type] ?? item.type}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{item.width}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{item.height}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{item.quantity}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-heading font-bold">${item.price.toFixed(2)}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{item.supplier}</td>
-                  <td className="py-[1.2rem] px-[2rem]">
-                    <div className="flex items-center gap-[0.8rem]">
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="button button-muted button-small flex items-center gap-[0.4rem]"
-                      >
-                        <Pencil className="w-[1.2rem] h-[1.2rem]" /> Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        disabled={deletingId === item.id}
-                        className="button button-danger button-small flex items-center gap-[0.4rem]"
-                      >
-                        {deletingId === item.id
-                          ? <Loader2 className="w-[1.2rem] h-[1.2rem] animate-spin" />
-                          : <Trash2 className="w-[1.2rem] h-[1.2rem]" />}
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={items}
+        emptyMessage="No hay telas registradas"
+        emptyIcon={<Palette className="w-[3rem] h-[3rem] opacity-30" />}
+        onEdit={openEdit}
+        onDelete={(item) => handleDelete(item.id)}
+        deletingId={deletingId}
+      />
 
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal animate-fade-in">
-          <div className="bg-white w-full max-w-[54rem] max-h-[90vh] overflow-y-auto">
-            <div className="px-[3rem] py-[2rem] border-b border-border">
-              <h2 className="text-heading text-[1.8rem]">
-                {editingItem ? 'Editar Tela' : 'Nueva Tela'}
-              </h2>
-            </div>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingItem ? 'Editar Tela' : 'Nueva Tela'}
+        footer={
+          <>
+            <button className="button button-muted" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </button>
+            <button
+              className="button"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? 'Guardando...' : editingItem ? 'Guardar Cambios' : 'Crear Tela'}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-[2rem]">
+          <FormField label="Nombre">
+            <FormInput
+              value={form.name}
+              onChange={(value) => setForm({ ...form, name: value })}
+              aria-label="Nombre"
+            />
+          </FormField>
 
-            <div className="px-[3rem] py-[2.4rem] flex flex-col gap-[2rem]">
-              <div>
-                <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                  Nombre
-                </label>
-                <input
-                  className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
-              </div>
+          <FormField label="Descripción">
+            <FormTextarea
+              value={form.description}
+              onChange={(value) => setForm({ ...form, description: value })}
+              rows={3}
+              aria-label="Descripción"
+            />
+          </FormField>
 
-              <div>
-                <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                  Descripción
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus resize-none"
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                />
-              </div>
+          <FormField label="Tipo">
+            <FormSelect
+              value={form.type}
+              onChange={(value) => setForm({ ...form, type: value as any })}
+              options={Object.entries(TELA_TYPE_LABELS).map(([v, l]) => ({
+                value: v,
+                label: l,
+              }))}
+              aria-label="Tipo"
+            />
+          </FormField>
 
-              <div>
-                <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                  Tipo
-                </label>
-                <select
-                  className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus bg-white"
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value as any })}
-                >
-                  {Object.entries(TYPE_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-[2rem]">
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                    Ancho (m)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus"
-                    value={form.width}
-                    onChange={(e) => setForm({ ...form, width: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                    Alto (m)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus"
-                    value={form.height}
-                    onChange={(e) => setForm({ ...form, height: Number(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-[2rem]">
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                    Stock
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus"
-                    value={form.quantity}
-                    onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                    Precio
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                  Proveedor
-                </label>
-                <input
-                  className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus"
-                  value={form.supplier}
-                  onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
-                  URL Imagen <span className="normal-case font-normal">(opcional)</span>
-                </label>
-                <input
-                  className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus"
-                  value={form.imageUrl ?? ''}
-                  placeholder="https://..."
-                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="px-[3rem] py-[2rem] border-t border-border flex justify-end gap-[1.2rem]">
-              <button className="button button-muted" onClick={() => setModalOpen(false)}>
-                Cancelar
-              </button>
-              <button
-                className="button flex items-center gap-[0.8rem]"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
-                {editingItem ? 'Guardar Cambios' : 'Crear Tela'}
-              </button>
-            </div>
+          <div className="grid grid-cols-2 gap-[2rem]">
+            <FormField label="Ancho (m)">
+              <FormNumberInput
+                value={form.width}
+                onChange={(value) => setForm({ ...form, width: value === '' ? 0 : value })}
+                min={0}
+                step={0.01}
+                aria-label="Ancho (m)"
+              />
+            </FormField>
+            <FormField label="Alto (m)">
+              <FormNumberInput
+                value={form.height}
+                onChange={(value) => setForm({ ...form, height: value === '' ? 0 : value })}
+                min={0}
+                step={0.01}
+                aria-label="Alto (m)"
+              />
+            </FormField>
           </div>
+
+          <div className="grid grid-cols-2 gap-[2rem]">
+            <FormField label="Stock">
+              <FormNumberInput
+                value={form.quantity}
+                onChange={(value) => setForm({ ...form, quantity: value === '' ? 0 : value })}
+                min={0}
+                aria-label="Stock"
+              />
+            </FormField>
+            <FormField label="Precio">
+              <FormNumberInput
+                value={form.price}
+                onChange={(value) => setForm({ ...form, price: value === '' ? 0 : value })}
+                min={0}
+                step={0.01}
+                aria-label="Precio"
+              />
+            </FormField>
+          </div>
+
+          <FormField label="Proveedor">
+            <FormInput
+              value={form.supplier}
+              onChange={(value) => setForm({ ...form, supplier: value })}
+              aria-label="Proveedor"
+            />
+          </FormField>
+
+          <FormField label="URL Imagen (opcional)">
+            <FormInput
+              value={form.imageUrl ?? ''}
+              onChange={(value) => setForm({ ...form, imageUrl: value })}
+              placeholder="https://..."
+              aria-label="URL Imagen"
+            />
+          </FormField>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

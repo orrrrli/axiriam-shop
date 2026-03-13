@@ -1,203 +1,385 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Pencil, Trash2, Loader2, Package } from 'lucide-react';
-import { InventoryItem, InventoryItemFormData } from '@/types/inventory';
+import Image from 'next/image';
+import { Plus, Package, ImageIcon, Upload, AlertCircle, ChevronDown, Loader2 } from 'lucide-react';
+import {
+  InventoryItem,
+  InventoryItemFormData,
+  InventoryItemCategory,
+  MaterialType,
+} from '@/types/inventory';
 import { formatPrice } from '@/lib/utils/helpers';
+import { useCloudinaryUpload } from '@/lib/hooks/use-cloudinary-upload';
+import { CATEGORY_LABELS, TYPE_LABELS, EMPTY_ITEM_FORM } from '@/lib/constants/admin/items.constants';
+import { createItem, updateItem, deleteItem } from '@/lib/services/admin/items.service';
+import { DataTable } from '@/components/admin/common/organisms/DataTable';
+import { Modal } from '@/components/admin/common/organisms/Modal';
+import { FormField } from '@/components/admin/common/molecules/FormField';
+import { FormInput } from '@/components/admin/common/atoms/FormInput';
+import { FormTextarea } from '@/components/admin/common/atoms/FormTextarea';
+import { FormNumberInput } from '@/components/admin/common/atoms/FormNumberInput';
+import { Button } from '@/components/admin/common/atoms/Button';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  sencillo: 'Sencillo',
-  'doble-vista': 'Doble Vista',
-  completo: 'Completo',
+type ItemFormState = Omit<InventoryItemFormData, 'quantityCompleto' | 'quantitySencillo'> & {
+  quantityCompleto: number | '';
+  quantitySencillo: number | '';
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  algodon: 'Algodón',
-  normal: 'Normal',
-  microfibra: 'Microfibra',
-  stretch: 'Stretch',
-  satin: 'Satín',
-  'stretch-antifluido': 'Stretch Antifluido',
-  'microfibra-antifluido': 'Microfibra Antifluido',
-};
-
-const emptyForm: InventoryItemFormData = {
-  name: '',
-  category: 'sencillo',
-  type: 'normal',
-  description: '',
-  quantity: 0,
-  price: 0,
-  materials: [],
-};
-
-export default function ItemsView({ initialItems }: { initialItems: InventoryItem[] }) {
+export default function ItemsView({
+  initialItems,
+}: {
+  initialItems: InventoryItem[];
+}): JSX.Element {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
+
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [form, setForm] = useState<InventoryItemFormData>(emptyForm);
+  const [form, setForm] = useState<ItemFormState>(EMPTY_ITEM_FORM);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  function openCreate() {
+  const handleUploadSuccess = useCallback((url: string) => {
+    setForm((prev) => ({ ...prev, photoUrl: url }));
+    setUploadError(null);
+  }, []);
+
+  const handleUploadError = useCallback((msg: string) => {
+    setUploadError(msg);
+  }, []);
+
+  const openUploadWidget = useCloudinaryUpload(handleUploadSuccess, handleUploadError);
+
+  function openCreate(): void {
     setEditingItem(null);
-    setForm(emptyForm);
+    setForm(EMPTY_ITEM_FORM);
+    setUploadError(null);
+    setSaveError(null);
     setModalOpen(true);
   }
 
-  function openEdit(item: InventoryItem) {
+  function openEdit(item: InventoryItem): void {
     setEditingItem(item);
     setForm({
       name: item.name,
       category: item.category,
       type: item.type,
       description: item.description,
-      quantity: item.quantity,
+      quantityCompleto: item.quantityCompleto,
+      quantitySencillo: item.quantitySencillo,
       price: item.price,
+      photoUrl: item.photoUrl,
       materials: item.materials,
     });
+    setUploadError(null);
+    setSaveError(null);
     setModalOpen(true);
   }
 
-  async function handleSave() {
+  async function handleSave(): Promise<void> {
+    setSaveError(null);
+    const quantityCompleto = Number(form.quantityCompleto) || 0;
+    const quantitySencillo = Number(form.quantitySencillo) || 0;
+    if (quantityCompleto < 0 || quantitySencillo < 0) {
+      setSaveError('Las cantidades no pueden ser negativas.');
+      return;
+    }
+    const payload: InventoryItemFormData = { ...form, quantityCompleto, quantitySencillo };
     setSaving(true);
     try {
-      const url = editingItem
-        ? `/api/admin/inventory/items/${editingItem.id}`
-        : '/api/admin/inventory/items';
-      const res = await fetch(url, {
-        method: editingItem ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
+      const result = editingItem
+        ? await updateItem(editingItem.id, payload)
+        : await createItem(payload);
+
+      if (result.success) {
         setModalOpen(false);
         router.refresh();
+      } else {
+        setSaveError(result.error);
       }
+    } catch {
+      setSaveError('Error de conexión. Intenta de nuevo.');
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string): Promise<void> {
     if (!confirm('¿Eliminar este item?')) return;
     setDeletingId(id);
     try {
-      await fetch(`/api/admin/inventory/items/${id}`, { method: 'DELETE' });
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      const result = await deleteItem(id);
+      if (result.success) {
+        setItems((prev) => prev.filter((i) => i.id !== id));
+      }
     } finally {
       setDeletingId(null);
     }
   }
+
+  const columns = [
+    {
+      header: 'Foto',
+      key: 'photoUrl',
+      render: (value: string | undefined, row: InventoryItem) =>
+        value ? (
+          <Image
+            src={value}
+            alt={row.name}
+            width={50}
+            height={50}
+            className="object-cover rounded"
+          />
+        ) : (
+          <ImageIcon className="w-[3rem] h-[3rem] text-subtle opacity-30" />
+        ),
+    },
+    {
+      header: 'Nombre',
+      key: 'name',
+      render: (value: string) => <strong className="text-heading">{value}</strong>,
+    },
+    {
+      header: 'Categoría',
+      key: 'category',
+      render: (value: InventoryItemCategory) => CATEGORY_LABELS[value] ?? value,
+    },
+    {
+      header: 'Tipo',
+      key: 'type',
+      render: (value: MaterialType) => TYPE_LABELS[value] ?? value,
+    },
+    { header: 'Completo', key: 'quantityCompleto' },
+    { header: 'Sencillo', key: 'quantitySencillo' },
+    {
+      header: 'Precio',
+      key: 'price',
+      render: (value: number) => <strong className="text-heading">{formatPrice(value)}</strong>,
+    },
+  ];
 
   return (
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       <div className="flex items-center justify-between mb-[3rem]">
         <div>
           <h1 className="text-heading text-[2.4rem]">Items</h1>
-          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">{items.length} productos en inventario</p>
+          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">
+            {items.length} productos en inventario
+          </p>
         </div>
-        <button className="button flex items-center gap-[0.8rem] text-[1.3rem]" onClick={openCreate}>
+        <button
+          className="button flex items-center gap-[0.8rem] text-[1.3rem]"
+          onClick={openCreate}
+        >
           <Plus className="w-[1.6rem] h-[1.6rem]" /> Nuevo Item
         </button>
       </div>
 
-      <div className="bg-white border border-border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-body-alt">
-                {['Nombre', 'Categoría', 'Tipo', 'Cantidad', 'Precio', 'Acciones'].map((h) => (
-                  <th key={h} className="text-left py-[1.2rem] px-[2rem] text-[1.2rem] text-subtle font-bold uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-[6rem] text-center text-subtle text-[1.4rem]">
-                    <Package className="w-[3rem] h-[3rem] mx-auto mb-[1rem] opacity-30" />
-                    No hay items registrados
-                  </td>
-                </tr>
-              )}
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-border last:border-b-0 hover:bg-body transition-colors duration-200">
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-heading font-bold">{item.name}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{CATEGORY_LABELS[item.category] ?? item.category}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{TYPE_LABELS[item.type] ?? item.type}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">{item.quantity}</td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-heading font-bold">{formatPrice(item.price)}</td>
-                  <td className="py-[1.2rem] px-[2rem]">
-                    <div className="flex items-center gap-[0.8rem]">
-                      <button onClick={() => openEdit(item)} className="button button-muted button-small flex items-center gap-[0.4rem]">
-                        <Pencil className="w-[1.2rem] h-[1.2rem]" /> Editar
-                      </button>
-                      <button onClick={() => handleDelete(item.id)} disabled={deletingId === item.id} className="button button-danger button-small flex items-center gap-[0.4rem]">
-                        {deletingId === item.id ? <Loader2 className="w-[1.2rem] h-[1.2rem] animate-spin" /> : <Trash2 className="w-[1.2rem] h-[1.2rem]" />}
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={items}
+        emptyMessage="No hay items registrados"
+        emptyIcon={<Package className="w-[3rem] h-[3rem] opacity-30" />}
+        onEdit={openEdit}
+        onDelete={(item) => handleDelete(item.id)}
+        deletingId={deletingId}
+      />
 
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal animate-fade-in">
-          <div className="bg-white w-full max-w-[54rem] max-h-[90vh] overflow-y-auto">
-            <div className="px-[3rem] py-[2rem] border-b border-border">
-              <h2 className="text-heading text-[1.8rem]">{editingItem ? 'Editar Item' : 'Nuevo Item'}</h2>
-            </div>
-            <div className="px-[3rem] py-[2.4rem] flex flex-col gap-[2rem]">
-              <div>
-                <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">Nombre</label>
-                <input className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-[2rem]">
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">Categoría</label>
-                  <select className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus bg-white" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as any })}>
-                    {Object.entries(CATEGORY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">Tipo</label>
-                  <select className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus bg-white" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as any })}>
-                    {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">Descripción</label>
-                <textarea rows={3} className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus resize-none" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-[2rem]">
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">Cantidad</label>
-                  <input type="number" min={0} className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">Precio</label>
-                  <input type="number" min={0} step={0.01} className="w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-                </div>
-              </div>
-            </div>
-            <div className="px-[3rem] py-[2rem] border-t border-border flex justify-end gap-[1.2rem]">
-              <button className="button button-muted" onClick={() => setModalOpen(false)}>Cancelar</button>
-              <button className="button flex items-center gap-[0.8rem]" onClick={handleSave} disabled={saving}>
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingItem ? 'Editar Item' : 'Nuevo Item'}
+        maxWidth="54rem"
+        footer={
+          <div className="w-full flex items-center justify-between gap-[1.2rem]">
+            {saveError ? (
+              <p className="flex items-center gap-[0.6rem] text-[1.2rem] text-red-500">
+                <AlertCircle className="w-[1.4rem] h-[1.4rem] shrink-0" />
+                {saveError}
+              </p>
+            ) : (
+              <span />
+            )}
+            <div className="flex items-center gap-[1.2rem]">
+              <Button variant="secondary" onClick={() => setModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
                 {editingItem ? 'Guardar Cambios' : 'Crear Item'}
-              </button>
+              </Button>
             </div>
           </div>
+        }
+      >
+        <div className="flex flex-col gap-[2.4rem]">
+          {/* Photo Upload */}
+          <div>
+            <label className="block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]">
+              Foto <span className="normal-case font-normal">(opcional)</span>
+            </label>
+            <button
+              type="button"
+              onClick={openUploadWidget}
+              className="group relative w-full border-2 border-dashed border-border hover:border-border-focus transition-colors duration-200 rounded overflow-hidden"
+            >
+              {form.photoUrl ? (
+                <>
+                  <Image
+                    src={form.photoUrl}
+                    alt="Preview"
+                    width={540}
+                    height={300}
+                    className="w-full h-[28rem] object-contain"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200 flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-[0.8rem] bg-white text-heading text-[1.3rem] font-bold px-[1.6rem] py-[0.8rem] rounded shadow">
+                      <Upload className="w-[1.4rem] h-[1.4rem]" /> Cambiar Foto
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="h-[20rem] flex flex-col items-center justify-center gap-[1.2rem] text-subtle group-hover:text-heading transition-colors duration-200">
+                  <Upload className="w-[3.2rem] h-[3.2rem] opacity-40 group-hover:opacity-70 transition-opacity duration-200" />
+                  <div className="text-center">
+                    <p className="text-[1.4rem] font-medium">Haz clic para subir una foto</p>
+                    <p className="text-[1.2rem] opacity-60 mt-[0.2rem]">PNG, JPG, WEBP</p>
+                  </div>
+                </div>
+              )}
+            </button>
+            {form.photoUrl && (
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, photoUrl: undefined })}
+                className="mt-[0.8rem] text-[1.2rem] text-red-500 hover:text-red-700 transition-colors duration-150"
+              >
+                Quitar foto
+              </button>
+            )}
+            {uploadError && (
+              <p className="flex items-center gap-[0.4rem] text-[1.2rem] text-red-500 mt-[0.6rem]">
+                <AlertCircle className="w-[1.4rem] h-[1.4rem] shrink-0" />
+                {uploadError}
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-border" />
+
+          {/* Basic Info */}
+          <div className="flex flex-col gap-[1.6rem]">
+            <p className="text-[1.1rem] font-bold text-subtle uppercase tracking-widest">
+              Información del Producto
+            </p>
+            <FormField label="Nombre" required>
+              <FormInput
+                value={form.name}
+                onChange={(value) => setForm({ ...form, name: value })}
+                placeholder="Ej. Bandana Básica"
+                aria-label="Nombre del item"
+              />
+            </FormField>
+            <div className="grid grid-cols-2 gap-[1.6rem]">
+              <FormField label="Categoría">
+                <div className="relative">
+                  <select
+                    className="w-full appearance-none border border-border px-[1.6rem] py-[1.2rem] pr-[4rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus transition-colors duration-150 bg-white cursor-pointer"
+                    value={form.category}
+                    onChange={(e) =>
+                      setForm({ ...form, category: e.target.value as InventoryItemCategory })
+                    }
+                    aria-label="Categoría del item"
+                  >
+                    {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-[1.4rem] top-1/2 -translate-y-1/2 w-[1.6rem] h-[1.6rem] text-subtle" />
+                </div>
+              </FormField>
+              <FormField label="Tipo">
+                <div className="relative">
+                  <select
+                    className="w-full appearance-none border border-border px-[1.6rem] py-[1.2rem] pr-[4rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus transition-colors duration-150 bg-white cursor-pointer"
+                    value={form.type}
+                    onChange={(e) =>
+                      setForm({ ...form, type: e.target.value as MaterialType })
+                    }
+                    aria-label="Tipo de material"
+                  >
+                    {Object.entries(TYPE_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-[1.4rem] top-1/2 -translate-y-1/2 w-[1.6rem] h-[1.6rem] text-subtle" />
+                </div>
+              </FormField>
+            </div>
+          </div>
+
+          <div className="border-t border-border" />
+
+          {/* Stock & Price */}
+          <div className="flex flex-col gap-[1.6rem]">
+            <p className="text-[1.1rem] font-bold text-subtle uppercase tracking-widest">
+              Stock y Precio
+            </p>
+            <div className="grid grid-cols-3 gap-[1.6rem]">
+              <FormField label="Completo">
+                <FormNumberInput
+                  value={form.quantityCompleto}
+                  onChange={(value) => setForm({ ...form, quantityCompleto: value })}
+                  min={0}
+                  aria-label="Cantidad completo"
+                />
+              </FormField>
+              <FormField label="Sencillo">
+                <FormNumberInput
+                  value={form.quantitySencillo}
+                  onChange={(value) => setForm({ ...form, quantitySencillo: value })}
+                  min={0}
+                  aria-label="Cantidad sencillo"
+                />
+              </FormField>
+              <FormField label="Precio">
+                <FormNumberInput
+                  value={form.price}
+                  onChange={(value) => setForm({ ...form, price: value === '' ? 0 : value })}
+                  min={0}
+                  step={0.01}
+                  aria-label="Precio del item"
+                />
+              </FormField>
+            </div>
+          </div>
+
+          <div className="border-t border-border" />
+
+          {/* Notes */}
+          <FormField label="Notas">
+            <FormTextarea
+              value={form.description}
+              onChange={(value) => setForm({ ...form, description: value })}
+              rows={3}
+              placeholder="Observaciones adicionales..."
+              aria-label="Notas del item"
+            />
+          </FormField>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

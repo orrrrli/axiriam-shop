@@ -2,34 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Trash2, Loader2, Truck } from 'lucide-react';
+import { Plus, Eye, Truck } from 'lucide-react';
 import { Sale, SaleStatus } from '@/types/inventory';
 import { formatPrice } from '@/lib/utils/helpers';
-
-const STATUS_LABELS: Record<SaleStatus, string> = {
-  pending: 'Pendiente',
-  shipped: 'Enviado',
-  delivered: 'Entregado',
-};
-
-const STATUS_STYLES: Record<SaleStatus, string> = {
-  pending: 'bg-[#fff8e1] text-[#f57f17]',
-  shipped: 'bg-[#e3f2fd] text-[#1565c0]',
-  delivered: 'bg-[#e8f5e9] text-[#2e7d32]',
-};
-
-const PLATFORM_ICONS: Record<string, string> = {
-  facebook: 'FB',
-  instagram: 'IG',
-  whatsapp: 'WA',
-};
-
-const SHIPPING_LABELS: Record<string, string> = {
-  local: 'Local',
-  nacional: 'Nacional',
-};
-
-const COLUMNS = ['Cliente', 'Red Social', 'Tipo Envío', 'Total', 'Estado', 'Entrega', 'Acciones'];
+import {
+  STATUS_LABELS,
+  STATUS_STYLES,
+  PLATFORM_ICONS,
+  SHIPPING_LABELS,
+  SALE_COLUMNS,
+} from '@/lib/constants/admin/sales.constants';
+import { updateSale, deleteSale } from '@/lib/services/admin/sales.service';
+import { DataTable } from '@/components/admin/common/organisms/DataTable';
+import { ActionButtons } from '@/components/admin/common/molecules/ActionButtons';
 
 export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
   const router = useRouter();
@@ -40,30 +25,136 @@ export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
     setItems((prev) =>
       prev.map((s) => (s.id === id ? { ...s, status } : s))
     );
-    await fetch(`/api/admin/inventory/sales/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+    
+    const sale = items.find((s) => s.id === id);
+    if (!sale) return;
+
+    const result = await updateSale(id, {
+      name: sale.name,
+      status,
+      socialMediaPlatform: sale.socialMediaPlatform,
+      socialMediaUsername: sale.socialMediaUsername,
+      trackingNumber: sale.trackingNumber,
+      invoiceRequired: sale.invoiceRequired,
+      shippingType: sale.shippingType,
+      localShippingOption: sale.localShippingOption,
+      localAddress: sale.localAddress,
+      nationalShippingCarrier: sale.nationalShippingCarrier,
+      shippingDescription: sale.shippingDescription,
+      discount: sale.discount,
+      totalAmount: sale.totalAmount,
+      deliveryDate: sale.deliveryDate,
+      saleItems: sale.saleItems,
+      extras: sale.extras,
     });
+
+    if (!result.success) {
+      alert(result.error);
+      // Revert optimistic update on error
+      setItems((prev) =>
+        prev.map((s) => (s.id === id ? sale : s))
+      );
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('¿Eliminar este envío?')) return;
     setDeletingId(id);
     try {
-      await fetch(`/api/admin/inventory/sales/${id}`, { method: 'DELETE' });
-      setItems((prev) => prev.filter((s) => s.id !== id));
+      const result = await deleteSale(id);
+      if (result.success) {
+        setItems((prev) => prev.filter((s) => s.id !== id));
+      } else {
+        alert(result.error);
+      }
     } finally {
       setDeletingId(null);
     }
   }
+
+  const columns = [
+    {
+      header: 'Cliente',
+      key: 'name',
+      render: (value: string) => (
+        <span className="text-heading font-bold">{value}</span>
+      ),
+    },
+    {
+      header: 'Red Social',
+      key: 'socialMediaPlatform',
+      render: (_: string, row: Sale) => (
+        <span className="inline-flex items-center gap-[0.4rem] bg-body-alt px-[0.8rem] py-[0.3rem] text-[1.2rem] text-paragraph font-bold">
+          {PLATFORM_ICONS[row.socialMediaPlatform] ?? row.socialMediaPlatform}
+          {' '}@{row.socialMediaUsername}
+        </span>
+      ),
+    },
+    {
+      header: 'Tipo Envío',
+      key: 'shippingType',
+      render: (value: string) => SHIPPING_LABELS[value] ?? value,
+    },
+    {
+      header: 'Total',
+      key: 'totalAmount',
+      render: (value: number) => (
+        <span className="text-heading font-bold">{formatPrice(value)}</span>
+      ),
+    },
+    {
+      header: 'Estado',
+      key: 'status',
+      render: (value: SaleStatus, row: Sale) => (
+        <select
+          className={`text-[1.2rem] font-bold px-[0.8rem] py-[0.3rem] border-0 cursor-pointer focus:outline-none ${STATUS_STYLES[value]}`}
+          value={value}
+          onChange={(e) => handleStatusChange(row.id, e.target.value as SaleStatus)}
+        >
+          {Object.entries(STATUS_LABELS).map(([v, l]) => (
+            <option key={v} value={v}>
+              {l}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      header: 'Entrega',
+      key: 'deliveryDate',
+      render: (value: string | undefined) =>
+        value ? new Date(value).toLocaleDateString('es-MX') : '—',
+    },
+    {
+      header: 'Acciones',
+      key: 'id',
+      render: (_: string, row: Sale) => (
+        <div className="flex items-center gap-[0.8rem]">
+          <button
+            onClick={() => router.push(`/admin/inventory/sales/${row.id}`)}
+            className="button button-muted button-small flex items-center gap-[0.4rem]"
+          >
+            <Eye className="w-[1.2rem] h-[1.2rem]" /> Ver
+          </button>
+          <ActionButtons
+            onDelete={() => handleDelete(row.id)}
+            deletingId={deletingId}
+            itemId={row.id}
+            deleteLabel="Eliminar"
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       <div className="flex items-center justify-between mb-[3rem]">
         <div>
           <h1 className="text-heading text-[2.4rem]">Envíos</h1>
-          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">{items.length} envíos registrados</p>
+          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">
+            {items.length} envíos registrados
+          </p>
         </div>
         <button
           className="button flex items-center gap-[0.8rem] text-[1.3rem]"
@@ -73,86 +164,12 @@ export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
         </button>
       </div>
 
-      <div className="bg-white border border-border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-body-alt">
-                {COLUMNS.map((h) => (
-                  <th key={h} className="text-left py-[1.2rem] px-[2rem] text-[1.2rem] text-subtle font-bold uppercase tracking-wide">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={COLUMNS.length} className="py-[6rem] text-center text-subtle text-[1.4rem]">
-                    <Truck className="w-[3rem] h-[3rem] mx-auto mb-[1rem] opacity-30" />
-                    No hay envíos registrados
-                  </td>
-                </tr>
-              )}
-              {items.map((sale) => (
-                <tr key={sale.id} className="border-b border-border last:border-b-0 hover:bg-body transition-colors duration-200">
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-heading font-bold">
-                    {sale.name}
-                  </td>
-                  <td className="py-[1.2rem] px-[2rem]">
-                    <span className="inline-flex items-center gap-[0.4rem] bg-body-alt px-[0.8rem] py-[0.3rem] text-[1.2rem] text-paragraph font-bold">
-                      {PLATFORM_ICONS[sale.socialMediaPlatform] ?? sale.socialMediaPlatform}
-                      {' '}@{sale.socialMediaUsername}
-                    </span>
-                  </td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">
-                    {SHIPPING_LABELS[sale.shippingType] ?? sale.shippingType}
-                  </td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-heading font-bold">
-                    {formatPrice(sale.totalAmount)}
-                  </td>
-                  <td className="py-[1.2rem] px-[2rem]">
-                    <select
-                      className={`text-[1.2rem] font-bold px-[0.8rem] py-[0.3rem] border-0 cursor-pointer focus:outline-none ${STATUS_STYLES[sale.status]}`}
-                      value={sale.status}
-                      onChange={(e) => handleStatusChange(sale.id, e.target.value as SaleStatus)}
-                    >
-                      {Object.entries(STATUS_LABELS).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph">
-                    {sale.deliveryDate
-                      ? new Date(sale.deliveryDate).toLocaleDateString('es-MX')
-                      : '—'}
-                  </td>
-                  <td className="py-[1.2rem] px-[2rem]">
-                    <div className="flex items-center gap-[0.8rem]">
-                      <button
-                        onClick={() => router.push(`/admin/inventory/sales/${sale.id}`)}
-                        className="button button-muted button-small flex items-center gap-[0.4rem]"
-                      >
-                        <Eye className="w-[1.2rem] h-[1.2rem]" /> Ver
-                      </button>
-                      <button
-                        onClick={() => handleDelete(sale.id)}
-                        disabled={deletingId === sale.id}
-                        className="button button-danger button-small flex items-center gap-[0.4rem]"
-                      >
-                        {deletingId === sale.id
-                          ? <Loader2 className="w-[1.2rem] h-[1.2rem] animate-spin" />
-                          : <Trash2 className="w-[1.2rem] h-[1.2rem]" />}
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={items}
+        emptyMessage="No hay envíos registrados"
+        emptyIcon={<Truck className="w-[3rem] h-[3rem] opacity-30" />}
+      />
     </div>
   );
 }

@@ -9,10 +9,11 @@ async function requireAdmin() {
   return session;
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const sale = await getSaleById(params.id);
+    const { id } = await params;
+    const sale = await getSaleById(id);
     if (!sale) return NextResponse.json({ error: 'Sale not found' }, { status: 404 });
     return NextResponse.json({ sale });
   } catch (error) {
@@ -21,20 +22,22 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    return NextResponse.json({ sale: await updateSale(params.id, await req.json()) });
+    const { id } = await params;
+    return NextResponse.json({ sale: await updateSale(id, await req.json()) });
   } catch (error) {
     console.error('PUT /api/admin/inventory/sales/[id]:', error);
     return NextResponse.json({ error: 'Failed to update sale' }, { status: 500 });
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    await deleteSale(params.id);
+    const { id } = await params;
+    await deleteSale(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/admin/inventory/sales/[id]:', error);

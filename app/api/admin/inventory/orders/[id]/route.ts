@@ -9,10 +9,11 @@ async function requireAdmin() {
   return session;
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const order = await getOrderById(params.id);
+    const { id } = await params;
+    const order = await getOrderById(id);
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     return NextResponse.json({ order });
   } catch (error) {
@@ -21,20 +22,22 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    return NextResponse.json({ order: await updateOrder(params.id, await req.json()) });
+    const { id } = await params;
+    return NextResponse.json({ order: await updateOrder(id, await req.json()) });
   } catch (error) {
     console.error('PUT /api/admin/inventory/orders/[id]:', error);
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    await deleteOrder(params.id);
+    const { id } = await params;
+    await deleteOrder(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/admin/inventory/orders/[id]:', error);

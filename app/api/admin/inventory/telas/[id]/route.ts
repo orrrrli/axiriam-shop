@@ -9,10 +9,11 @@ async function requireAdmin() {
   return session;
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const design = await getDesignById(params.id);
+    const { id } = await params;
+    const design = await getDesignById(id);
     if (!design) return NextResponse.json({ error: 'Design not found' }, { status: 404 });
     return NextResponse.json({ design });
   } catch (error) {
@@ -21,20 +22,22 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    return NextResponse.json({ design: await updateDesign(params.id, await req.json()) });
+    const { id } = await params;
+    return NextResponse.json({ design: await updateDesign(id, await req.json()) });
   } catch (error) {
     console.error('PUT /api/admin/inventory/telas/[id]:', error);
     return NextResponse.json({ error: 'Failed to update design' }, { status: 500 });
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    await deleteDesign(params.id);
+    const { id } = await params;
+    await deleteDesign(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/admin/inventory/telas/[id]:', error);

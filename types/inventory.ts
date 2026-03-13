@@ -1,17 +1,10 @@
 // ─── SHARED ───────────────────────────────────────────────
 
-export type MaterialType =
-  | 'algodon'
-  | 'normal'
-  | 'microfibra'
-  | 'stretch'
-  | 'satin'
-  | 'stretch-antifluido'
-  | 'microfibra-antifluido';
+export type MaterialType = 'stretch-antifluido' | 'brush';
 
 // ─── ITEMS ────────────────────────────────────────────────
 
-export type InventoryItemCategory = 'sencillo' | 'doble-vista' | 'completo';
+export type InventoryItemCategory = 'bandana' | 'gorrito';
 
 export interface InventoryItem {
   id: string;
@@ -19,9 +12,11 @@ export interface InventoryItem {
   category: InventoryItemCategory;
   type: MaterialType;
   description: string;
-  quantity: number;
+  quantityCompleto: number;
+  quantitySencillo: number;
   price: number;
-  materials: string[]; // RawMaterial IDs
+  photoUrl?: string;
+  materials: string[];
   createdAt: Date;
   updatedAt: Date;
 }

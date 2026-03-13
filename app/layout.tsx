@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Tajawal } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
@@ -24,6 +25,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <Script
+          src="https://upload-widget.cloudinary.com/latest/global/all.js"
+          strategy="lazyOnload"
+        />
+      </head>
       <body className={`${tajawal.variable} font-sans`}>
         <AuthProvider>
           <BasketProvider>

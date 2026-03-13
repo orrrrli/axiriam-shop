@@ -55,8 +55,10 @@ export async function createItem(data: InventoryItemFormData) {
       category: toDbCategory(data.category) as any,
       type: toDbMaterialType(data.type) as any,
       description: data.description,
-      quantity: data.quantity,
+      quantityCompleto: data.quantityCompleto,
+      quantitySencillo: data.quantitySencillo,
       price: data.price,
+      photoUrl: data.photoUrl || null,
       materials: {
         create: data.materials.map((rawMaterialId) => ({ rawMaterialId })),
       },
@@ -82,8 +84,10 @@ export async function updateItem(id: string, data: InventoryItemFormData) {
       category: toDbCategory(data.category) as any,
       type: toDbMaterialType(data.type) as any,
       description: data.description,
-      quantity: data.quantity,
+      quantityCompleto: data.quantityCompleto,
+      quantitySencillo: data.quantitySencillo,
       price: data.price,
+      photoUrl: data.photoUrl || null,
       materials: {
         create: data.materials.map((rawMaterialId) => ({ rawMaterialId })),
       },
@@ -100,8 +104,17 @@ export async function updateItem(id: string, data: InventoryItemFormData) {
 }
 
 export async function deleteItem(id: string) {
+  const item = await prisma.inventoryItem.findUnique({ where: { id }, select: { photoUrl: true } });
+
   await prisma.inventoryItemMaterial.deleteMany({ where: { itemId: id } });
   await prisma.inventoryItem.delete({ where: { id } });
+
+  if (item?.photoUrl) {
+    const { deleteCloudinaryImage } = await import('@/lib/utils/cloudinary');
+    await deleteCloudinaryImage(item.photoUrl).catch((err) =>
+      console.error('Failed to delete Cloudinary image:', err),
+    );
+  }
 }
 
 // ─── DISEÑOS ──────────────────────────────────────────────

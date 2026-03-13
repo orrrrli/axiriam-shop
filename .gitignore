@@ -38,6 +38,7 @@ next-env.d.ts
 # IDE
 .vscode/
 .claude/
+.kiro/
 .idea/
 *.swp
 *.swo

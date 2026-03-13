@@ -61,8 +61,8 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
     setSaving(true);
     try {
       const url = editingItem
-        ? `/api/admin/inventory/designs/${editingItem.id}`
-        : '/api/admin/inventory/designs';
+        ? `/api/admin/inventory/telas/${editingItem.id}`
+        : '/api/admin/inventory/telas';
       const res = await fetch(url, {
         method: editingItem ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,10 +78,10 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar este diseño?')) return;
+    if (!confirm('¿Eliminar esta tela?')) return;
     setDeletingId(id);
     try {
-      await fetch(`/api/admin/inventory/designs/${id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/inventory/telas/${id}`, { method: 'DELETE' });
       setItems((prev) => prev.filter((i) => i.id !== id));
     } finally {
       setDeletingId(null);
@@ -94,11 +94,11 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       <div className="flex items-center justify-between mb-[3rem]">
         <div>
-          <h1 className="text-heading text-[2.4rem]">Diseños</h1>
-          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">{items.length} diseños registrados</p>
+          <h1 className="text-heading text-[2.4rem]">Telas</h1>
+          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">{items.length} telas registradas</p>
         </div>
         <button className="button flex items-center gap-[0.8rem] text-[1.3rem]" onClick={openCreate}>
-          <Plus className="w-[1.6rem] h-[1.6rem]" /> Nuevo Diseño
+          <Plus className="w-[1.6rem] h-[1.6rem]" /> Nueva Tela
         </button>
       </div>
 
@@ -119,7 +119,7 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
                 <tr>
                   <td colSpan={COLUMNS.length} className="py-[6rem] text-center text-subtle text-[1.4rem]">
                     <Palette className="w-[3rem] h-[3rem] mx-auto mb-[1rem] opacity-30" />
-                    No hay diseños registrados
+                    No hay telas registradas
                   </td>
                 </tr>
               )}
@@ -164,7 +164,7 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
           <div className="bg-white w-full max-w-[54rem] max-h-[90vh] overflow-y-auto">
             <div className="px-[3rem] py-[2rem] border-b border-border">
               <h2 className="text-heading text-[1.8rem]">
-                {editingItem ? 'Editar Diseño' : 'Nuevo Diseño'}
+                {editingItem ? 'Editar Tela' : 'Nueva Tela'}
               </h2>
             </div>
 
@@ -298,7 +298,7 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
                 disabled={saving}
               >
                 {saving && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
-                {editingItem ? 'Guardar Cambios' : 'Crear Diseño'}
+                {editingItem ? 'Guardar Cambios' : 'Crear Tela'}
               </button>
             </div>
           </div>

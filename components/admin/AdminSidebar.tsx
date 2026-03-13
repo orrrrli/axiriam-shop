@@ -13,8 +13,8 @@ import {
 
 const navItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Items', href: '/admin/inventory/items', icon: Package },
-  { label: 'Diseños', href: '/admin/inventory/designs', icon: Palette },
+  { label: 'Telas', href: '/admin/inventory/items', icon: Package },
+  { label: 'Telas', href: '/admin/inventory/telas', icon: Palette },
   { label: 'Pedidos', href: '/admin/inventory/orders', icon: ShoppingCart },
   { label: 'Envíos', href: '/admin/inventory/sales', icon: Truck },
   { label: 'Cotizaciones', href: '/admin/inventory/quotes', icon: FileText },

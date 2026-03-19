@@ -62,6 +62,8 @@ const config: Config = {
         sans: ['var(--font-tajawal)', 'Helvetica', 'Arial', 'sans-serif'],
         poppins: ['var(--font-poppins)', 'sans-serif'],
         inter: ['var(--font-inter)', 'sans-serif'],
+        montserrat: ['var(--font-montserrat)', 'sans-serif'],
+        geist: ['var(--font-geist)', 'sans-serif'],
       },
       screens: {
         'xs': '480px',

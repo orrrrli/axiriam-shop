@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useCheckoutStore } from '@/lib/store/checkoutStore';
 import { formatPrice, calculateTax } from '@/lib/utils/helpers';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/organisms/Navbar';
 import StepTracker from '@/components/StepTracker';
 import Link from 'next/link';
 import { ArrowLeft, Check } from 'lucide-react';

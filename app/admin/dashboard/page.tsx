@@ -2,8 +2,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getAdminStats } from '@/lib/services/admin.service';
-import { DollarSign, ShoppingBag, Users, Package, Clock } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, Package, Clock, ExternalLink } from 'lucide-react';
 import { formatPrice } from '@/lib/utils/helpers';
+import Link from 'next/link';
 
 export default async function AdminDashboard(): Promise<React.ReactElement> {
   const session = await getServerSession(authOptions);
@@ -24,11 +25,22 @@ export default async function AdminDashboard(): Promise<React.ReactElement> {
   return (
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       {/* Header */}
-      <div className="mb-[3rem]">
-        <h1 className="text-heading text-[2.4rem]">Dashboard</h1>
-        <p className="text-admin-muted text-[1.4rem] mt-[0.4rem]">
-          Welcome back, {session.user?.name?.split(' ')[0] || 'Admin'}
-        </p>
+      <div className="mb-[3rem] flex items-start justify-between gap-[2rem]">
+        <div>
+          <h1 className="text-heading text-[2.4rem]">Dashboard</h1>
+          <p className="text-admin-muted text-[1.4rem] mt-[0.4rem]">
+            Welcome back, {session.user?.name?.split(' ')[0] || 'Admin'}
+          </p>
+        </div>
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-[0.8rem] px-[1.6rem] py-[1rem] text-[1.3rem] font-semibold text-paragraph bg-white border border-border rounded-[0.8rem] hover:border-border-focus hover:bg-admin-bg transition-all duration-200 whitespace-nowrap"
+        >
+          <ExternalLink className="w-[1.6rem] h-[1.6rem]" />
+          Ver tienda
+        </Link>
       </div>
 
       {/* Stats Grid */}

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { Tajawal, Poppins, Inter } from 'next/font/google';
+import { Tajawal, Poppins, Inter, Montserrat, Geist } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import ToastProvider from '@/components/providers/ToastProvider';
@@ -28,6 +28,20 @@ const inter = Inter({
   display: 'swap',
 });
 
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-montserrat',
+  display: 'swap',
+});
+
+const geist = Geist({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-geist',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Axiriam | Gorros Quirúrgicos',
   description: 'Gorros quirúrgicos de alta calidad con diseños únicos para profesionales de la salud.',
@@ -46,7 +60,7 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
       </head>
-      <body className={`${tajawal.variable} ${poppins.variable} ${inter.variable} font-sans`}>
+      <body className={`${tajawal.variable} ${poppins.variable} ${inter.variable} ${montserrat.variable} ${geist.variable} font-sans`}>
         <AuthProvider>
           <BasketProvider>
             <ToastProvider />

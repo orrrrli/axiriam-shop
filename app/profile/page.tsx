@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/organisms/Navbar';
 import { Package, Clock, Loader2, User } from 'lucide-react';
 import { formatPrice } from '@/lib/utils/helpers';
 

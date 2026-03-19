@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/organisms/Navbar';
 import Footer from '@/components/Footer';
-import Banner from '@/components/Banner';
+import HeroSection from '@/components/organisms/HeroSection';
 import ProductShowcaseGrid from '@/components/ProductShowcaseGrid';
 import type { Product } from '@/types/product';
 
@@ -48,10 +48,11 @@ export default function Home() {
   return (
     <main className="content !p-0 !block !min-h-0">
       <Navbar />
-      <div className="w-full pt-[10rem] px-[10rem] max-xs:pt-[8.5rem] max-xs:px-[1.6rem]">
-        {/* Banner */}
-        <Banner />
 
+      {/* Hero */}
+      <HeroSection />
+
+      <div className="w-full px-[10rem] max-xs:px-[1.6rem]">
         {/* Featured Products */}
         <div className="mt-[10rem] mx-[5rem] max-xs:mx-0 max-xs:mt-[5rem]">
           <div className="flex justify-between items-center mb-[2rem]">

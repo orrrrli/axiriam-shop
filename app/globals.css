@@ -184,6 +184,30 @@
 }
 
 /* ============================================
+   SHOP TYPOGRAPHY
+   Montserrat → headings, logo, nav, buttons
+   Geist      → body copy, prices, descriptions
+   ============================================ */
+
+.shop-layout {
+  font-family: var(--font-geist), system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.shop-layout h1,
+.shop-layout h2,
+.shop-layout h3,
+.shop-layout h4 {
+  font-family: var(--font-montserrat), sans-serif;
+  font-weight: 700;
+}
+
+.nav-island {
+  font-family: var(--font-montserrat), sans-serif;
+}
+
+
+/* ============================================
    ADMIN TYPOGRAPHY
    Poppins → structure (headings, labels, nav, buttons, th)
    Inter   → content (inputs, td, descriptions, body copy)

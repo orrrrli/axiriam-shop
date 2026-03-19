@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { TransitionLink } from '@/components/transitions/NavigationEvents';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -76,7 +77,7 @@ export default function AdminSidebar(): React.ReactElement {
           {navItems.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + '/');
             return (
-              <Link
+              <TransitionLink
                 key={href}
                 href={href}
                 className={`
@@ -90,7 +91,7 @@ export default function AdminSidebar(): React.ReactElement {
               >
                 <Icon className="w-[2rem] h-[2rem] shrink-0" />
                 {label}
-              </Link>
+              </TransitionLink>
             );
           })}
         </div>

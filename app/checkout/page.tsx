@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCartStore } from '@/lib/store/cartStore';
 import { formatPrice } from '@/lib/utils/helpers';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/organisms/Navbar';
 import StepTracker from '@/components/StepTracker';
 import ImageLoader from '@/components/ImageLoader';
 import Link from 'next/link';

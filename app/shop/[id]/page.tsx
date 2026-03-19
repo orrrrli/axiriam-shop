@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/organisms/Navbar';
 import Footer from '@/components/Footer';
 import ImageLoader from '@/components/ImageLoader';
 import ProductShowcaseGrid from '@/components/ProductShowcaseGrid';

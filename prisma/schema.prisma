@@ -124,17 +124,18 @@ enum InventoryItemCategory {
 }
 
 model InventoryItem {
-  id          String                @id @default(cuid())
-  name        String
-  category    InventoryItemCategory
-  type        MaterialType
+  id               String                @id @default(cuid())
+  name             String
+  category         InventoryItemCategory
+  type             MaterialType
   description      String
   quantityCompleto Int
   quantitySencillo Int
   price            Float
   photoUrl         String?
+  tags             String[]
   createdAt        DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
+  updatedAt        DateTime              @updatedAt
 
   materials  InventoryItemMaterial[]
   saleItems  SaleItem[]

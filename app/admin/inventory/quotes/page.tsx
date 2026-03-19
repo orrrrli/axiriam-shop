@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getQuotes } from '@/services/quote-service';
-import QuotesView from '@/components/admin/inventory/QuotesView';
+import QuotesView from '@/components/admin/inventory/quotes/QuotesView';
 
 export default async function QuotesPage(): Promise<React.ReactElement> {
   const session = await getServerSession(authOptions);

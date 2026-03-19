@@ -16,6 +16,7 @@ export interface InventoryItem {
   quantitySencillo: number;
   price: number;
   photoUrl?: string;
+  tags: string[];
   materials: string[];
   createdAt: Date;
   updatedAt: Date;

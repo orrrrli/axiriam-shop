@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import QuoteFormPage from '@/components/admin/inventory/QuoteFormPage';
+import QuoteFormPage from '@/components/admin/inventory/quotes/QuoteFormPage';
 
 export default async function NewQuotePage(): Promise<React.ReactElement> {
   const session = await getServerSession(authOptions);

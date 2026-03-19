@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getDesigns } from '@/lib/services/inventory.service';
-import TelasView from '@/components/admin/inventory/TelasView';
+import TelasView from '@/components/admin/inventory/telas/TelasView';
 
 export default async function TelasPage() {
   const session = await getServerSession(authOptions);

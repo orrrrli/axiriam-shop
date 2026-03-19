@@ -14,6 +14,7 @@ interface DataTableProps<T extends { id: string }> {
   emptyIcon?: React.ReactNode;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  onRowClick?: (item: T) => void;
   deletingId?: string | null;
 }
 
@@ -24,6 +25,7 @@ export function DataTable<T extends { id: string }>({
   emptyIcon,
   onEdit,
   onDelete,
+  onRowClick,
   deletingId,
 }: DataTableProps<T>): React.ReactElement {
   const hasActions = onEdit || onDelete;
@@ -64,7 +66,8 @@ export function DataTable<T extends { id: string }>({
             {data.map((row) => (
               <tr
                 key={row.id}
-                className="border-b border-border last:border-b-0 hover:bg-admin-bg transition-colors duration-200"
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                className={`border-b border-border last:border-b-0 hover:bg-admin-bg transition-colors duration-200${onRowClick ? ' cursor-pointer' : ''}`}
               >
                 {columns.map((col) => (
                   <td

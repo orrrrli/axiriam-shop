@@ -59,6 +59,7 @@ export async function createItem(data: InventoryItemFormData) {
       quantitySencillo: data.quantitySencillo,
       price: data.price,
       photoUrl: data.photoUrl || null,
+      tags: data.tags ?? [],
       materials: {
         create: data.materials.map((rawMaterialId) => ({ rawMaterialId })),
       },
@@ -88,6 +89,7 @@ export async function updateItem(id: string, data: InventoryItemFormData) {
       quantitySencillo: data.quantitySencillo,
       price: data.price,
       photoUrl: data.photoUrl || null,
+      tags: data.tags ?? [],
       materials: {
         create: data.materials.map((rawMaterialId) => ({ rawMaterialId })),
       },

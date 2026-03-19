@@ -32,6 +32,8 @@ export const ITEM_COLUMNS = [
   'Acciones',
 ];
 
+export const MAX_ITEM_TAGS = 10;
+
 /**
  * Default form values for creating a new inventory item.
  * Quantity fields default to '' so inputs render empty rather than showing 0.
@@ -45,5 +47,6 @@ export const EMPTY_ITEM_FORM = {
   quantitySencillo: '' as number | '',
   price: 0,
   photoUrl: undefined as string | undefined,
+  tags: [] as string[],
   materials: [] as string[],
 };

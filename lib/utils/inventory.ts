@@ -69,5 +69,16 @@ export function validateItemBody(body: Record<string, unknown>): ItemValidationE
   if (typeof body.quantitySencillo === 'number' && (!Number.isInteger(body.quantitySencillo) || body.quantitySencillo < 0)) {
     return { code: 'INVALID_QUANTITY', message: 'quantitySencillo must be a non-negative integer', field: 'quantitySencillo' };
   }
+  if (body.tags !== undefined) {
+    if (!Array.isArray(body.tags)) {
+      return { code: 'INVALID_TAGS', message: 'tags must be an array', field: 'tags' };
+    }
+    if ((body.tags as unknown[]).length > 10) {
+      return { code: 'TOO_MANY_TAGS', message: 'Maximum 10 tags allowed', field: 'tags' };
+    }
+    if ((body.tags as unknown[]).some((t) => typeof t !== 'string' || (t as string).trim().length === 0)) {
+      return { code: 'INVALID_TAG', message: 'Each tag must be a non-empty string', field: 'tags' };
+    }
+  }
   return null;
 }

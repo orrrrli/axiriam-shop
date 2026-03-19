@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Package, ImageIcon, Upload, AlertCircle, ChevronDown, Loader2 } from 'lucide-react';
+import { Plus, Package, ImageIcon, Upload, AlertCircle, ChevronDown, Loader2, Pencil, Trash2, X } from 'lucide-react';
 import {
   InventoryItem,
   InventoryItemFormData,
@@ -12,11 +12,12 @@ import {
 } from '@/types/inventory';
 import { formatPrice } from '@/lib/utils/helpers';
 import { useCloudinaryUpload } from '@/lib/hooks/use-cloudinary-upload';
-import { CATEGORY_LABELS, TYPE_LABELS, EMPTY_ITEM_FORM } from '@/lib/constants/admin/items.constants';
+import { CATEGORY_LABELS, TYPE_LABELS, EMPTY_ITEM_FORM, MAX_ITEM_TAGS } from '@/lib/constants/admin/items.constants';
 import { createItem, updateItem, deleteItem } from '@/lib/services/admin/items.service';
 import { DataTable } from '@/components/admin/common/organisms/DataTable';
 import { ProductTableFilters } from '@/components/admin/common/organisms/ProductTableFilters';
 import { SlideOver } from '@/components/admin/common/organisms/SlideOver';
+import { Modal } from '@/components/admin/common/organisms/Modal';
 import { FormField } from '@/components/admin/common/molecules/FormField';
 import { FormInput } from '@/components/admin/common/atoms/FormInput';
 import { FormTextarea } from '@/components/admin/common/atoms/FormTextarea';
@@ -50,6 +51,10 @@ export default function ItemsView({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
+  const [tagInput, setTagInput] = useState('');
 
   // Filter & sort state
   const [activeTab, setActiveTab] = useState<'general' | 'completos' | 'sencillos'>('general');
@@ -98,6 +103,7 @@ export default function ItemsView({
   function openCreate(): void {
     setEditingItem(null);
     setForm(EMPTY_ITEM_FORM);
+    setTagInput('');
     setUploadError(null);
     setSaveError(null);
     setModalOpen(true);
@@ -114,8 +120,10 @@ export default function ItemsView({
       quantitySencillo: item.quantitySencillo,
       price: item.price,
       photoUrl: item.photoUrl,
+      tags: item.tags ?? [],
       materials: item.materials,
     });
+    setTagInput('');
     setUploadError(null);
     setSaveError(null);
     setModalOpen(true);
@@ -149,18 +157,54 @@ export default function ItemsView({
     }
   }
 
-  async function handleDelete(id: string): Promise<void> {
-    if (!confirm('¿Eliminar este producto?')) return;
-    setDeletingId(id);
+  function openDeleteModal(item: InventoryItem): void {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  }
+
+  function closeDeleteModal(): void {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+  }
+
+  async function handleDeleteConfirm(): Promise<void> {
+    if (!itemToDelete) return;
+    setDeletingId(itemToDelete.id);
     try {
-      const result = await deleteItem(id);
+      const result = await deleteItem(itemToDelete.id);
       if (result.success) {
-        setItems((prev) => prev.filter((i) => i.id !== id));
+        setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
+        closeDeleteModal();
       }
     } finally {
       setDeletingId(null);
     }
   }
+
+  const actionsCol = {
+    header: 'Acciones',
+    key: 'id',
+    render: (_: string, row: InventoryItem) => (
+      <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={() => openEdit(row)}
+          className="p-[0.8rem] text-gray-400 hover:text-[#101010] hover:bg-gray-100 rounded-[0.6rem] transition-colors duration-150"
+          aria-label="Editar"
+        >
+          <Pencil className="w-[1.8rem] h-[1.8rem]" />
+        </button>
+        <button
+          type="button"
+          onClick={() => openDeleteModal(row)}
+          className="p-[0.8rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
+          aria-label="Eliminar"
+        >
+          <Trash2 className="w-[1.8rem] h-[1.8rem]" />
+        </button>
+      </div>
+    ),
+  };
 
   const baseColumns = [
     {
@@ -207,11 +251,11 @@ export default function ItemsView({
   const columns = useMemo(() => {
     switch (activeTab) {
       case 'completos':
-        return [...baseColumns, completoCol, precioCol];
+        return [...baseColumns, completoCol, precioCol, actionsCol];
       case 'sencillos':
-        return [...baseColumns, sencilloCol, precioCol];
+        return [...baseColumns, sencilloCol, precioCol, actionsCol];
       default:
-        return [...baseColumns, completoCol, sencilloCol, precioCol];
+        return [...baseColumns, completoCol, sencilloCol, precioCol, actionsCol];
     }
   }, [activeTab]);
 
@@ -247,9 +291,7 @@ export default function ItemsView({
         data={filteredAndSortedItems}
         emptyMessage="No hay productos registrados"
         emptyIcon={<Package className="w-[3rem] h-[3rem] opacity-30" />}
-        onEdit={openEdit}
-        onDelete={(item) => handleDelete(item.id)}
-        deletingId={deletingId}
+        onRowClick={(item) => router.push(`/admin/inventory/items/${item.id}`)}
       />
 
       <SlideOver
@@ -418,6 +460,64 @@ export default function ItemsView({
             </FormField>
           </div>
 
+          {/* Tags */}
+          <div>
+            <label className="block text-[1.2rem] font-medium text-gray-500 mb-[0.8rem]">
+              Etiquetas{' '}
+              <span className="font-normal text-gray-400">
+                ({form.tags.length}/{MAX_ITEM_TAGS})
+              </span>
+            </label>
+            {form.tags.length > 0 && (
+              <div className="flex flex-wrap gap-[0.6rem] mb-[0.8rem]">
+                {form.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-[0.4rem] px-[1rem] py-[0.4rem] rounded-full text-[1.2rem] font-medium bg-[#f0f0f0] text-[#101010] border border-gray-200"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, tags: form.tags.filter((t) => t !== tag) })}
+                      className="text-gray-400 hover:text-red-500 transition-colors duration-150 leading-none"
+                      aria-label={`Quitar etiqueta ${tag}`}
+                    >
+                      <X className="w-[1.2rem] h-[1.2rem]" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {form.tags.length < MAX_ITEM_TAGS && (
+              <div className="flex items-center gap-[0.8rem] max-w-[28rem]">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                  placeholder="Ej. Marvel, Anime..."
+                  className={`${INPUT_CLASS} flex-1 min-w-0`}
+                  aria-label="Nueva etiqueta"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tag = tagInput.trim();
+                    if (tag && !form.tags.includes(tag) && form.tags.length < MAX_ITEM_TAGS) {
+                      setForm({ ...form, tags: [...form.tags, tag] });
+                    }
+                    setTagInput('');
+                  }}
+                  disabled={!tagInput.trim()}
+                  className="shrink-0 w-[3.4rem] h-[3.4rem] flex items-center justify-center rounded-[0.6rem] bg-[#101010] text-white disabled:opacity-30 disabled:cursor-not-allowed transition-opacity duration-150"
+                  aria-label="Agregar etiqueta"
+                >
+                  <Plus className="w-[1.6rem] h-[1.6rem]" />
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Full width: Notas */}
           <FormField label="Notas">
             <FormTextarea
@@ -431,6 +531,39 @@ export default function ItemsView({
           </FormField>
         </div>
       </SlideOver>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        title="Eliminar Producto"
+        footer={
+          <>
+            <button
+              type="button"
+              className="button button-muted"
+              onClick={closeDeleteModal}
+              disabled={deletingId !== null}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="button button-danger flex items-center gap-[0.6rem]"
+              onClick={handleDeleteConfirm}
+              disabled={deletingId !== null}
+            >
+              {deletingId !== null && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
+              Eliminar
+            </button>
+          </>
+        }
+      >
+        <p className="text-[1.4rem] text-paragraph">
+          ¿Confirmas que deseas eliminar el producto{' '}
+          <strong>{itemToDelete?.name}</strong>? Esta acción no se puede deshacer.
+        </p>
+      </Modal>
     </div>
   );
 }

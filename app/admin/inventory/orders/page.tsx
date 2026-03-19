@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getOrders } from '@/lib/services/inventory.service';
-import OrdersView from '@/components/admin/inventory/OrdersView';
+import OrdersView from '@/components/admin/inventory/orders/OrdersView';
 
 export default async function OrdersPage() {
   const session = await getServerSession(authOptions);

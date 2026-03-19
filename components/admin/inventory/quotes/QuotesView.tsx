@@ -176,13 +176,13 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
       {/* Controls: Search + Sort */}
       <div className="flex items-center justify-between gap-[1.6rem] mb-[2rem] flex-wrap">
         <div className="relative flex-1 max-w-[32rem]">
-          <Search className="pointer-events-none absolute left-[1.2rem] top-1/2 -translate-y-1/2 w-[1.6rem] h-[1.6rem] text-gray-400" />
+          <Search className="pointer-events-none absolute left-[1.2rem] top-1/2 -translate-y-1/2 w-[1.5rem] h-[1.5rem] text-gray-400" />
           <input
             type="text"
             placeholder="Buscar por cliente, folio o empresa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-[3.6rem] pr-[1.2rem] py-[0.8rem] bg-[#f5f5f5] border-0 border-b border-gray-300 text-[1.3rem] text-heading placeholder:text-gray-400 focus:outline-none focus:border-blue-500 transition-colors duration-150"
+            className="w-full pl-[3.6rem] pr-[1.2rem] py-[0.8rem] bg-white border border-gray-200 rounded-[0.8rem] text-[1.3rem] text-heading placeholder:text-gray-400 focus:outline-none focus:border-gray-400 transition-colors duration-150 hover:border-gray-300"
           />
         </div>
 
@@ -190,12 +190,12 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-            className="appearance-none bg-[#f5f5f5] border-0 border-b border-gray-300 px-[1.2rem] py-[0.8rem] pr-[3.2rem] text-[1.3rem] text-gray-600 focus:outline-none focus:border-blue-500 cursor-pointer"
+            className="appearance-none bg-white border border-gray-200 rounded-[0.8rem] px-[1.4rem] py-[0.8rem] pr-[3.4rem] text-[1.3rem] font-medium text-gray-600 focus:outline-none focus:border-gray-400 cursor-pointer transition-colors duration-150 hover:border-gray-300"
           >
-            <option value="desc">Más reciente primero</option>
-            <option value="asc">Más antiguo primero</option>
+            <option value="desc">Más reciente</option>
+            <option value="asc">Más antiguo</option>
           </select>
-          <ChevronDown className="pointer-events-none absolute right-[0.8rem] top-1/2 -translate-y-1/2 w-[1.4rem] h-[1.4rem] text-gray-400" />
+          <ChevronDown className="pointer-events-none absolute right-[1rem] top-1/2 -translate-y-1/2 w-[1.4rem] h-[1.4rem] text-gray-400" />
         </div>
       </div>
 

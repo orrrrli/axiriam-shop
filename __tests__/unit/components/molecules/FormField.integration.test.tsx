@@ -126,7 +126,7 @@ describe('FormField Integration Tests', () => {
     
     // Verify it matches the existing admin form styling
     expect(label.className).toBe(
-      'block text-[1.2rem] font-bold text-subtle uppercase tracking-wide mb-[0.8rem]'
+      'block text-[1.2rem] font-medium text-gray-500 mb-[0.4rem]'
     );
   });
 });

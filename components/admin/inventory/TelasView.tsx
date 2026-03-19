@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Palette } from 'lucide-react';
+import { Plus, Warehouse } from 'lucide-react';
 import { RawMaterial, RawMaterialFormData } from '@/types/inventory';
 import { TELA_TYPE_LABELS, EMPTY_TELA_FORM } from '@/lib/constants/admin/telas.constants';
 import { createTela, updateTela, deleteTela } from '@/lib/services/admin/telas.service';
@@ -66,7 +66,7 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar esta tela?')) return;
+    if (!confirm('¿Eliminar este material?')) return;
     setDeletingId(id);
     try {
       const result = await deleteTela(id);
@@ -106,19 +106,19 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       <div className="flex items-center justify-between mb-[3rem]">
         <div>
-          <h1 className="text-heading text-[2.4rem]">Telas</h1>
-          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">{items.length} telas registradas</p>
+          <h1 className="text-heading text-[2.4rem]">Almacén</h1>
+          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">{items.length} materiales registrados</p>
         </div>
         <button className="button flex items-center gap-[0.8rem] text-[1.3rem]" onClick={openCreate}>
-          <Plus className="w-[1.6rem] h-[1.6rem]" /> Nueva Tela
+          <Plus className="w-[1.6rem] h-[1.6rem]" /> Nuevo Material
         </button>
       </div>
 
       <DataTable
         columns={columns}
         data={items}
-        emptyMessage="No hay telas registradas"
-        emptyIcon={<Palette className="w-[3rem] h-[3rem] opacity-30" />}
+        emptyMessage="No hay materiales registrados"
+        emptyIcon={<Warehouse className="w-[3rem] h-[3rem] opacity-30" />}
         onEdit={openEdit}
         onDelete={(item) => handleDelete(item.id)}
         deletingId={deletingId}
@@ -127,7 +127,7 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editingItem ? 'Editar Tela' : 'Nueva Tela'}
+        title={editingItem ? 'Editar Material' : 'Nuevo Material'}
         footer={
           <>
             <button className="button button-muted" onClick={() => setModalOpen(false)}>
@@ -138,7 +138,7 @@ export default function DesignsView({ initialDesigns }: { initialDesigns: RawMat
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? 'Guardando...' : editingItem ? 'Guardar Cambios' : 'Crear Tela'}
+              {saving ? 'Guardando...' : editingItem ? 'Guardar Cambios' : 'Crear Material'}
             </button>
           </>
         }

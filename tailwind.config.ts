@@ -45,12 +45,23 @@ const config: Config = {
         danger: 'rgba(247, 45, 45, 0.986)',
         warning: 'rgb(228, 165, 31)',
 
+        // Admin UI
+        'admin-bg': '#F5F7FA',
+        'admin-sidebar': '#ffffff',
+        'admin-active': '#E8F4FE',
+        'admin-active-text': '#1A8FE3',
+        'admin-active-border': '#1A8FE3',
+        'admin-muted': '#8A94A6',
+        'admin-nav-text': '#3F4254',
+
         // Social
         facebook: '#0078ff',
         github: '#24292e',
       },
       fontFamily: {
         sans: ['var(--font-tajawal)', 'Helvetica', 'Arial', 'sans-serif'],
+        poppins: ['var(--font-poppins)', 'sans-serif'],
+        inter: ['var(--font-inter)', 'sans-serif'],
       },
       screens: {
         'xs': '480px',

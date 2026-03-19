@@ -59,7 +59,9 @@
   .button {
     @apply bg-primary text-white font-bold relative flex items-center justify-center
            border border-primary transition-all duration-300 ease-bezier;
-    padding: 1.6rem;
+    padding: 1.2rem 2.4rem;
+    border-radius: 0.8rem;
+    gap: 0.6rem;
   }
 
   .button:hover {
@@ -162,14 +164,13 @@
   .content-admin {
     @apply w-full fixed top-0 left-0 relative flex overflow-hidden;
     height: 100vh;
-    padding-top: 5.6rem;
   }
 
   .content-admin-wrapper {
     @apply flex-grow relative animate-fade-in;
-    overflow-y: scroll;
-    padding: 1.6rem 0;
-    padding-top: 0;
+    background-color: #F5F7FA;
+    overflow-y: auto;
+    padding: 0;
   }
 
   /* --- Section padding --- */
@@ -180,6 +181,59 @@
   .container-padding {
     @apply px-4 sm:px-6 lg:px-8;
   }
+}
+
+/* ============================================
+   ADMIN TYPOGRAPHY
+   Poppins → structure (headings, labels, nav, buttons, th)
+   Inter   → content (inputs, td, descriptions, body copy)
+   ============================================ */
+
+.content-admin {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.content-admin h1,
+.content-admin h2,
+.content-admin h3,
+.content-admin h4,
+.content-admin h5,
+.content-admin h6 {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 700;
+}
+
+.content-admin label {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 600;
+}
+
+.content-admin button,
+.content-admin .button {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 600;
+}
+
+.content-admin nav a {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 600;
+}
+
+.content-admin th {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 600;
+}
+
+.content-admin input,
+.content-admin textarea,
+.content-admin select {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 400;
+}
+
+.content-admin td {
+  font-family: var(--font-inter), sans-serif;
 }
 
 /* ============================================

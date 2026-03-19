@@ -25,8 +25,11 @@ export function fromDbLocalShipping(option: string): string {
   return option.replace(/_/g, '-');
 }
 
-export function generateQuoteNumber(count: number): string {
-  return `COT-${String(count + 1).padStart(4, '0')}`;
+export function generateQuoteNumber(): string {
+  const now = new Date();
+  const fecha = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const rdn = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  return `COT-${fecha}-${rdn}`;
 }
 
 // ─── ITEM VALIDATION ─────────────────────────────────────

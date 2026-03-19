@@ -51,7 +51,7 @@ export const EMPTY_QUOTE_FORM: QuoteFormData = {
   discount: 0,
   notes: undefined,
   iva: 16,
-  includingIva: false,
+  includingIva: true,
   paymentMethod: 'Transferencia',
   items: [],
   extras: [],

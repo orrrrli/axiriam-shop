@@ -27,8 +27,8 @@ describe('FormField Component', () => {
     // Check for the asterisk
     const asterisk = screen.getByText('*');
     expect(asterisk).toBeInTheDocument();
-    expect(asterisk).toHaveClass('text-red-500');
-    expect(asterisk).toHaveClass('ml-[0.4rem]');
+    expect(asterisk).toHaveClass('text-blue-500');
+    expect(asterisk).toHaveClass('ml-[0.2rem]');
   });
 
   it('should not display required indicator when required is false', () => {
@@ -109,11 +109,9 @@ describe('FormField Component', () => {
     const label = screen.getByText('Styled Label');
     expect(label).toHaveClass('block');
     expect(label).toHaveClass('text-[1.2rem]');
-    expect(label).toHaveClass('font-bold');
-    expect(label).toHaveClass('text-subtle');
-    expect(label).toHaveClass('uppercase');
-    expect(label).toHaveClass('tracking-wide');
-    expect(label).toHaveClass('mb-[0.8rem]');
+    expect(label).toHaveClass('font-medium');
+    expect(label).toHaveClass('text-gray-500');
+    expect(label).toHaveClass('mb-[0.4rem]');
   });
 
   it('should render complex children correctly', () => {

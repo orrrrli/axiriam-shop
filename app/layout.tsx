@@ -1,16 +1,31 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { Tajawal } from 'next/font/google';
+import { Tajawal, Poppins, Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import ToastProvider from '@/components/providers/ToastProvider';
 import { BasketProvider } from '@/components/providers/BasketProvider';
 import BasketDrawer from '@/components/BasketDrawer';
+import TransitionProvider from '@/components/transitions/TransitionProvider';
 
 const tajawal = Tajawal({
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '700', '800', '900'],
   variable: '--font-tajawal',
+});
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -31,11 +46,13 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
       </head>
-      <body className={`${tajawal.variable} font-sans`}>
+      <body className={`${tajawal.variable} ${poppins.variable} ${inter.variable} font-sans`}>
         <AuthProvider>
           <BasketProvider>
             <ToastProvider />
-            {children}
+            <TransitionProvider>
+              {children}
+            </TransitionProvider>
             <BasketDrawer />
           </BasketProvider>
         </AuthProvider>

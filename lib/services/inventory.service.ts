@@ -420,8 +420,7 @@ export async function getQuoteById(id: string) {
 }
 
 export async function createQuote(data: QuoteFormData) {
-  const count = await prisma.quote.count();
-  const quoteNumber = generateQuoteNumber(count);
+  const quoteNumber = generateQuoteNumber();
 
   const subtotal =
     data.items.reduce((sum, item) => sum + item.unitPrice * item.quantity - (item.discount ?? 0), 0) +

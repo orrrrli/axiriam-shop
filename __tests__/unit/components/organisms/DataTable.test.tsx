@@ -151,7 +151,7 @@ describe('DataTable Component', () => {
     const { container } = render(<DataTable columns={mockColumns} data={mockData} />);
 
     const rows = container.querySelectorAll('tbody tr');
-    expect(rows[0]).toHaveClass('hover:bg-body');
+    expect(rows[0]).toHaveClass('hover:bg-admin-bg');
   });
 
   it('should apply responsive overflow styling', () => {

@@ -1,14 +1,14 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getQuotes } from '@/lib/services/inventory.service';
+import { getQuotes } from '@/services/quote-service';
 import QuotesView from '@/components/admin/inventory/QuotesView';
 
-export default async function QuotesPage() {
+export default async function QuotesPage(): Promise<React.ReactElement> {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== 'admin') redirect('/');
 
   const quotes = await getQuotes();
 
-  return <QuotesView initialQuotes={quotes as any} />;
+  return <QuotesView initialQuotes={quotes} />;
 }

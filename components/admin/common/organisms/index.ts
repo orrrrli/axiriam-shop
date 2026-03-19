@@ -8,3 +8,6 @@
 export * from './Modal';
 export * from './DataTable';
 export * from './FormModal';
+export * from './AdminNavbar';
+export * from './ProductTableFilters';
+export * from './SlideOver';

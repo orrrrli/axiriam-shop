@@ -40,7 +40,7 @@ export const MAX_ITEM_TAGS = 10;
  */
 export const EMPTY_ITEM_FORM = {
   name: '',
-  category: 'bandana' as InventoryItemCategory,
+  category: 'gorrito' as InventoryItemCategory,
   type: 'stretch-antifluido' as MaterialType,
   description: '',
   quantityCompleto: '' as number | '',

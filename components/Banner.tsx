@@ -19,7 +19,7 @@ const Banner = () => {
           de la salud. Comodidad y estilo en cada turno.
         </p>
         <br />
-        <Link href="/shop" className="button inline-flex items-center gap-2 no-underline">
+        <Link href="/catalogo" className="button inline-flex items-center gap-2 no-underline">
           Shop Now&nbsp;
           <ArrowRight size={18} />
         </Link>

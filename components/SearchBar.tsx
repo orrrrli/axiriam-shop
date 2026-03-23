@@ -27,7 +27,7 @@ const SearchBar = () => {
     });
 
     setIsRecentOpen(false);
-    router.push(`/shop?search=${encodeURIComponent(trimmed)}`);
+    router.push(`/catalogo?search=${encodeURIComponent(trimmed)}`);
   };
 
   const onKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {

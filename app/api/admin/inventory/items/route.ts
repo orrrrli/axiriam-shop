@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getItems, createItem } from '@/lib/services/inventory.service';
+import { getItems, createItem, InventoryError } from '@/lib/services/inventory.service';
 import { validateItemBody } from '@/lib/utils/inventory';
+import type { ItemCreatePayload } from '@/types/inventory';
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -23,13 +24,16 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const body = await req.json();
+    const body = await req.json() as ItemCreatePayload;
     const validationError = validateItemBody(body);
     if (validationError) {
       return NextResponse.json({ error: validationError.message, code: validationError.code, field: validationError.field }, { status: 400 });
     }
     return NextResponse.json({ item: await createItem(body) }, { status: 201 });
   } catch (error) {
+    if (error instanceof InventoryError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 409 });
+    }
     console.error('POST /api/admin/inventory/items:', error);
     return NextResponse.json({ error: 'Failed to create item' }, { status: 500 });
   }

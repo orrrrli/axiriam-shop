@@ -57,7 +57,7 @@ export default function Home() {
         <div className="mt-[10rem] mx-[5rem] max-xs:mx-0 max-xs:mt-[5rem]">
           <div className="flex justify-between items-center mb-[2rem]">
             <h1 className="text-heading text-[2.4rem] m-0">Featured Products</h1>
-            <Link href="/shop?filter=featured" className="underline text-[1.8rem] text-heading">
+            <Link href="/catalogo?filter=featured" className="underline text-[1.8rem] text-heading">
               See All
             </Link>
           </div>
@@ -71,7 +71,7 @@ export default function Home() {
         <div className="mt-[10rem] mx-[5rem] max-xs:mx-0 max-xs:mt-[5rem]">
           <div className="flex justify-between items-center mb-[2rem]">
             <h1 className="text-heading text-[2.4rem] m-0">Recommended Products</h1>
-            <Link href="/shop" className="underline text-[1.8rem] text-heading">
+            <Link href="/catalogo" className="underline text-[1.8rem] text-heading">
               See All
             </Link>
           </div>

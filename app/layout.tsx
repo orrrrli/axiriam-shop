@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { Tajawal, Poppins, Inter, Montserrat, Geist } from 'next/font/google';
+import { Tajawal, Poppins, Inter, Montserrat, Geist, Source_Sans_3, Karla } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import ToastProvider from '@/components/providers/ToastProvider';
@@ -23,8 +23,22 @@ const poppins = Poppins({
 
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-inter',
+  display: 'swap',
+});
+
+const karla = Karla({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-karla',
+  display: 'swap',
+});
+
+const sourceSansPro = Source_Sans_3({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-source-sans',
   display: 'swap',
 });
 
@@ -60,7 +74,7 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
       </head>
-      <body className={`${tajawal.variable} ${poppins.variable} ${inter.variable} ${montserrat.variable} ${geist.variable} font-sans`}>
+      <body className={`${tajawal.variable} ${poppins.variable} ${inter.variable} ${montserrat.variable} ${geist.variable} ${sourceSansPro.variable} ${karla.variable} font-sans`}>
         <AuthProvider>
           <BasketProvider>
             <ToastProvider />

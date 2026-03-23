@@ -12,19 +12,19 @@ async function requireAdmin() {
 export async function GET() {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    return NextResponse.json({ designs: await getDesigns() });
+    return NextResponse.json({ materials: await getDesigns() });
   } catch (error) {
-    console.error('GET /api/admin/inventory/telas:', error);
-    return NextResponse.json({ error: 'Failed to fetch designs' }, { status: 500 });
+    console.error('GET /api/admin/inventory/warehouse:', error);
+    return NextResponse.json({ error: 'Failed to fetch materials' }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    return NextResponse.json({ design: await createDesign(await req.json()) }, { status: 201 });
+    return NextResponse.json({ material: await createDesign(await req.json()) }, { status: 201 });
   } catch (error) {
-    console.error('POST /api/admin/inventory/telas:', error);
-    return NextResponse.json({ error: 'Failed to create design' }, { status: 500 });
+    console.error('POST /api/admin/inventory/warehouse:', error);
+    return NextResponse.json({ error: 'Failed to create material' }, { status: 500 });
   }
 }

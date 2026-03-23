@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
-  Eye,
   Pencil,
   Trash2,
   FileText,
@@ -117,32 +116,24 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
         <div className="flex items-center gap-[0.8rem]">
           <button
             type="button"
-            onClick={() => router.push(`/admin/inventory/quotes/${row.quoteNumber}`)}
-            className="p-[1rem] text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[0.6rem] transition-colors duration-150"
-            aria-label="Ver cotización"
-          >
-            <Eye className="w-[1.8rem] h-[1.8rem]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push(`/admin/inventory/quotes/${row.quoteNumber}/edit`)}
-            className="p-[1rem] text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[0.6rem] transition-colors duration-150"
+            onClick={(e) => { e.stopPropagation(); router.push(`/admin/inventory/quotes/${row.quoteNumber}/edit`); }}
+            className="p-[0.8rem] text-gray-400 hover:text-[#101010] hover:bg-gray-100 rounded-[0.6rem] transition-colors duration-150"
             aria-label="Editar cotización"
           >
             <Pencil className="w-[1.8rem] h-[1.8rem]" />
           </button>
           <button
             type="button"
-            onClick={() => handleDownloadPDF(row)}
-            className="p-[1rem] text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-[0.6rem] transition-colors duration-150"
+            onClick={(e) => { e.stopPropagation(); handleDownloadPDF(row); }}
+            className="p-[0.8rem] text-gray-400 hover:text-[#101010] hover:bg-gray-100 rounded-[0.6rem] transition-colors duration-150"
             aria-label="Descargar PDF"
           >
             <Download className="w-[1.8rem] h-[1.8rem]" />
           </button>
           <button
             type="button"
-            onClick={() => openDelete(row)}
-            className="p-[1rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
+            onClick={(e) => { e.stopPropagation(); openDelete(row); }}
+            className="p-[0.8rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
             aria-label="Eliminar cotización"
           >
             <Trash2 className="w-[1.8rem] h-[1.8rem]" />
@@ -205,6 +196,7 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
         data={filteredQuotes}
         emptyMessage="No hay cotizaciones registradas"
         emptyIcon={<FileText className="w-[3rem] h-[3rem] opacity-30" />}
+        onRowClick={(item) => router.push(`/admin/inventory/quotes/${item.quoteNumber}`)}
       />
 
       {/* Delete Confirmation Modal */}

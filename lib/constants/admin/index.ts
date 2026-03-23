@@ -6,7 +6,8 @@
 
 // Export constant modules as they are created
 export * from './items.constants';
-export * from './telas.constants';
+export * from './warehouse.constants';
 export * from './orders.constants';
 export * from './sales.constants';
 export * from './quotes.constants';
+export * from './ventas.constants';

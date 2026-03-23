@@ -24,6 +24,17 @@ export interface InventoryItem {
 
 export type InventoryItemFormData = Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>;
 
+export interface ItemCreatePayload extends InventoryItemFormData {
+  warehouseMaterialId?: string;
+  materialConsumedQty?: number;
+}
+
+export interface InventoryItemSalesStats {
+  itemId: string;
+  quantitySold: number;
+  salesCount: number;
+}
+
 // ─── DISEÑOS (Raw Materials) ──────────────────────────────
 
 export interface RawMaterial {
@@ -121,6 +132,59 @@ export interface Sale {
 }
 
 export type SaleFormData = Omit<Sale, 'id' | 'saleRef' | 'createdAt' | 'updatedAt'>;
+
+// ─── VENTAS (Store Orders) ────────────────────────────────
+
+export type StoreOrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+
+export interface StoreOrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  productId: string;
+}
+
+export interface StoreShippingAddress {
+  id: string;
+  fullName: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+}
+
+export interface StoreOrder {
+  id: string;
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  orderItems: StoreOrderItem[];
+  shippingAddress?: StoreShippingAddress;
+  paymentMethod: string;
+  itemsPrice: number;
+  taxPrice: number;
+  shippingPrice: number;
+  totalPrice: number;
+  isPaid: boolean;
+  paidAt?: Date;
+  isDelivered: boolean;
+  deliveredAt?: Date;
+  status: StoreOrderStatus;
+  trackingNumber?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StoreOrderUpdateData {
+  status: StoreOrderStatus;
+  trackingNumber?: string;
+  isDelivered?: boolean;
+  deliveredAt?: string;
+}
 
 // ─── COTIZACIONES (Quotes) ────────────────────────────────
 

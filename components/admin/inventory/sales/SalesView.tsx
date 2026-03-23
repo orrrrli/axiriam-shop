@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, Truck } from 'lucide-react';
+import { Plus, Truck, Trash2, Loader2 } from 'lucide-react';
 import { Sale, SaleStatus } from '@/types/inventory';
 import { formatPrice } from '@/lib/utils/helpers';
 import {
@@ -14,7 +14,6 @@ import {
 } from '@/lib/constants/admin/sales.constants';
 import { updateSale, deleteSale } from '@/lib/services/admin/sales.service';
 import { DataTable } from '@/components/admin/common/organisms/DataTable';
-import { ActionButtons } from '@/components/admin/common/molecules/ActionButtons';
 
 export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
   const router = useRouter();
@@ -109,6 +108,7 @@ export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
         <select
           className={`text-[1.2rem] font-bold px-[0.8rem] py-[0.3rem] border-0 cursor-pointer focus:outline-none ${STATUS_STYLES[value]}`}
           value={value}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => handleStatusChange(row.id, e.target.value as SaleStatus)}
         >
           {Object.entries(STATUS_LABELS).map(([v, l]) => (
@@ -129,19 +129,19 @@ export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
       header: 'Acciones',
       key: 'id',
       render: (_: string, row: Sale) => (
-        <div className="flex items-center gap-[0.8rem]">
+        <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={() => router.push(`/admin/inventory/sales/${row.id}`)}
-            className="button button-muted button-small flex items-center gap-[0.4rem]"
+            type="button"
+            onClick={() => handleDelete(row.id)}
+            disabled={deletingId === row.id}
+            className="p-[0.8rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
+            aria-label="Eliminar"
           >
-            <Eye className="w-[1.2rem] h-[1.2rem]" /> Ver
+            {deletingId === row.id
+              ? <Loader2 className="w-[1.8rem] h-[1.8rem] animate-spin" />
+              : <Trash2 className="w-[1.8rem] h-[1.8rem]" />
+            }
           </button>
-          <ActionButtons
-            onDelete={() => handleDelete(row.id)}
-            deletingId={deletingId}
-            itemId={row.id}
-            deleteLabel="Eliminar"
-          />
         </div>
       ),
     },
@@ -169,6 +169,7 @@ export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
         data={items}
         emptyMessage="No hay envíos registrados"
         emptyIcon={<Truck className="w-[3rem] h-[3rem] opacity-30" />}
+        onRowClick={(item) => router.push(`/admin/inventory/sales/${item.id}`)}
       />
     </div>
   );

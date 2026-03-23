@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="#f7f8fa"/>
+  <!-- Gorrito shape (surgical cap) -->
+  <ellipse cx="300" cy="390" rx="160" ry="22" fill="#000" opacity="0.05"/>
+  <path d="M140 360 Q145 250 300 200 Q455 250 460 360 Q420 385 300 388 Q180 385 140 360Z" fill="#F4A7B9" opacity="0.95"/>
+  <!-- Brim -->
+  <path d="M140 360 Q220 375 300 378 Q380 375 460 360 Q420 385 300 388 Q180 385 140 360Z" fill="#E8809A" opacity="0.7"/>
+  <!-- Texture curves -->
+  <path d="M165 330 Q300 318 435 330" fill="none" stroke="white" stroke-width="2" opacity="0.4"/>
+  <path d="M155 305 Q300 290 445 305" fill="none" stroke="white" stroke-width="2" opacity="0.3"/>
+  <path d="M165 275 Q300 260 435 275" fill="none" stroke="white" stroke-width="1.5" opacity="0.25"/>
+  <!-- Tie strings -->
+  <path d="M140 360 Q110 370 90 390" fill="none" stroke="#E8809A" stroke-width="5" stroke-linecap="round"/>
+  <path d="M460 360 Q490 370 510 390" fill="none" stroke="#E8809A" stroke-width="5" stroke-linecap="round"/>
+  <!-- Top button -->
+  <circle cx="300" cy="202" r="12" fill="#E8809A" opacity="0.9"/>
+  <circle cx="300" cy="202" r="6" fill="white" opacity="0.5"/>
+</svg>

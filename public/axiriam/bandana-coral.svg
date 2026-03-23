@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="#f7f8fa"/>
+  <ellipse cx="300" cy="370" rx="165" ry="18" fill="#000" opacity="0.05"/>
+  <path d="M112 268 Q182 198 300 193 Q418 198 488 268 Q458 342 300 358 Q142 342 112 268Z" fill="#FF7F7F" opacity="0.90"/>
+  <!-- Flower pattern dots -->
+  <circle cx="210" cy="260" r="8" fill="white" opacity="0.25"/>
+  <circle cx="230" cy="248" r="5" fill="white" opacity="0.2"/>
+  <circle cx="255" cy="268" r="7" fill="white" opacity="0.22"/>
+  <circle cx="340" cy="255" r="9" fill="white" opacity="0.25"/>
+  <circle cx="365" cy="270" r="6" fill="white" opacity="0.2"/>
+  <circle cx="390" cy="252" r="7" fill="white" opacity="0.22"/>
+  <circle cx="300" cy="242" r="6" fill="white" opacity="0.2"/>
+  <path d="M112 268 Q182 198 300 193 Q418 198 488 268" fill="none" stroke="#E55E5E" stroke-width="2.5" opacity="0.45"/>
+  <path d="M300 193 Q312 168 322 145" fill="none" stroke="#E55E5E" stroke-width="6" stroke-linecap="round"/>
+  <path d="M300 193 Q288 168 278 145" fill="none" stroke="#E55E5E" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="300" cy="142" rx="24" ry="11" fill="#E55E5E" opacity="0.85"/>
+</svg>

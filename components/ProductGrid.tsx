@@ -10,7 +10,7 @@ interface ProductGridProps {
 
 const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-[1.2rem] justify-center max-xs:!grid-cols-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-[1.6rem] max-xs:grid-cols-2">
       {products.length === 0
         ? new Array(12).fill({}).map((_, index) => (
             <ProductCard key={`skeleton-${index}`} product={{}} />

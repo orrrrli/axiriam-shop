@@ -1,5 +1,17 @@
 import { MaterialType } from '@/types/inventory';
 
+// ─── SLUG ─────────────────────────────────────────────────
+
+export function slugifyItemName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 // Prisma enums use underscores, frontend types use hyphens
 export function toDbMaterialType(type: string): string {
   return type.replace(/-/g, '_');

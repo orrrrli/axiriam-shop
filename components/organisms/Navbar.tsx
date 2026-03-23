@@ -20,10 +20,10 @@ interface DemoUser {
 }
 
 const CATEGORIES = [
-  { label: 'Gorros Quirúrgicos', href: '/shop?category=gorros' },
-  { label: 'Estampados', href: '/shop?category=estampados' },
-  { label: 'Lisos', href: '/shop?category=lisos' },
-  { label: 'Edición Limitada', href: '/shop?category=limitada' },
+  { label: 'Gorros Quirúrgicos', href: '/catalogo?category=gorros' },
+  { label: 'Estampados', href: '/catalogo?category=estampados' },
+  { label: 'Lisos', href: '/catalogo?category=lisos' },
+  { label: 'Edición Limitada', href: '/catalogo?category=limitada' },
 ];
 
 const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
@@ -84,7 +84,7 @@ const Navbar = (): React.ReactElement | null => {
   }, []);
 
   const basketDisabledPaths = ['/checkout', '/auth/signin', '/auth/signup'];
-  const isOnShop = pathname === '/shop' || pathname.startsWith('/shop');
+  const isOnShop = pathname === '/catalogo' || pathname.startsWith('/catalogo');
   const isOnAbout = pathname === '/nosotros' || pathname.startsWith('/nosotros');
   const isOnStudio = pathname === '/studio' || pathname.startsWith('/studio');
 
@@ -235,8 +235,8 @@ const Navbar = (): React.ReactElement | null => {
           Inicio
         </TransitionLink>
 
-        <TransitionLink href="/shop" style={navLinkStyle(isOnShop)}>
-          Tienda
+        <TransitionLink href="/catalogo" style={navLinkStyle(isOnShop)}>
+          Catálogo
         </TransitionLink>
 
         {/* Categorías dropdown */}

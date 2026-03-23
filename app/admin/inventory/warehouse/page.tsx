@@ -2,13 +2,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getDesigns } from '@/lib/services/inventory.service';
-import TelasView from '@/components/admin/inventory/telas/TelasView';
+import WarehouseView from '@/components/admin/inventory/warehouse/WarehouseView';
 
-export default async function TelasPage() {
+export default async function WarehousePage() {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== 'admin') redirect('/');
 
-  const designs = await getDesigns();
+  const materials = await getDesigns();
 
-  return <TelasView initialDesigns={designs as any} />;
+  return <WarehouseView initialMaterials={materials as any} />;
 }

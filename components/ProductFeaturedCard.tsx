@@ -17,7 +17,7 @@ const ProductFeaturedCard: React.FC<ProductFeaturedCardProps> = ({ product }) =>
 
   const onClickItem = () => {
     if (!productId) return;
-    router.push(`/shop/${productId}`);
+    router.push(`/catalogo/${productId}`);
   };
 
   return (

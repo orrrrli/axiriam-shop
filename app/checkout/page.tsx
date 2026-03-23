@@ -47,7 +47,7 @@ export default function CheckoutStep1() {
           <p className="text-paragraph text-[1.4rem] mb-[3rem]">
             Add some items to your basket before proceeding to checkout.
           </p>
-          <Link href="/shop" className="button">
+          <Link href="/catalogo" className="button">
             <ShoppingBag size={16} />
             &nbsp; Shop Now
           </Link>
@@ -91,7 +91,7 @@ export default function CheckoutStep1() {
                 {/* Details */}
                 <div className="flex-grow px-[1.2rem]">
                   <Link
-                    href={`/shop/${item.id}`}
+                    href={`/catalogo/${item.id}`}
                     className="no-underline"
                   >
                     <h4 className="underline text-heading text-[1.3rem] my-[0.3rem]">

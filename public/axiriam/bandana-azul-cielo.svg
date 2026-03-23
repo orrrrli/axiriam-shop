@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="#f7f8fa"/>
+  <!-- Bandana shape -->
+  <ellipse cx="300" cy="290" rx="190" ry="80" fill="#6BAED6" opacity="0.15"/>
+  <path d="M110 270 Q180 200 300 195 Q420 200 490 270 Q460 340 300 355 Q140 340 110 270Z" fill="#5BA3D0" opacity="0.9"/>
+  <path d="M110 270 Q180 200 300 195 Q420 200 490 270" fill="none" stroke="#4A92BF" stroke-width="3" opacity="0.6"/>
+  <!-- Fabric texture lines -->
+  <path d="M170 240 Q300 228 430 240" fill="none" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <path d="M155 258 Q300 244 445 258" fill="none" stroke="white" stroke-width="1.5" opacity="0.3"/>
+  <!-- Elastic band -->
+  <path d="M300 195 Q310 170 320 148" fill="none" stroke="#4A92BF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M300 195 Q290 170 280 148" fill="none" stroke="#4A92BF" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="300" cy="145" rx="22" ry="10" fill="#4A92BF" opacity="0.8"/>
+  <!-- Shadow -->
+  <ellipse cx="300" cy="370" rx="160" ry="18" fill="#000" opacity="0.05"/>
+</svg>

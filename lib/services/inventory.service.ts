@@ -1,207 +1,212 @@
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import {
+  InventoryItem,
   InventoryItemFormData,
+  ItemCreatePayload,
+  InventoryItemSalesStats,
+  RawMaterial,
   RawMaterialFormData,
+  OrderMaterial,
+  OrderMaterialGroup,
+  OrderMaterialDesign,
   OrderMaterialFormData,
+  OrderMaterialStatus,
+  ParcelService,
+  Sale,
+  SaleItem,
+  SaleExtra,
   SaleFormData,
+  SaleStatus,
+  SocialMediaPlatform,
+  ShippingType,
+  LocalShippingOption,
+  NationalShippingCarrier,
+  Quote,
   QuoteFormData,
+  IvaRate,
+  PaymentMethod,
+  QuoteItem,
+  QuoteStatus,
+  StoreOrder,
+  StoreOrderUpdateData,
 } from '@/types/inventory';
+import { toDbMaterialType, toDbLocalShipping, fromDbLocalShipping, fromDbMaterialType, slugifyItemName } from '@/lib/utils/inventory';
 import {
-  toDbMaterialType,
-  toDbCategory,
-  fromDbMaterialType,
-  fromDbCategory,
-  toDbLocalShipping,
-  fromDbLocalShipping,
-  generateQuoteNumber,
-} from '@/lib/utils/inventory';
+  findAllItems,
+  findItemById,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem,
+  createItemAndDeductStock,
+  createItemWithNewWarehouse,
+  findItemsSalesStats,
+  findAllDesigns,
+  findDesignById,
+  createDesignRecord,
+  updateDesignRecord,
+  deleteDesignRecord,
+  countItemsLinkedToMaterial,
+  findAllStoreOrders,
+  findStoreOrderById,
+  updateStoreOrderRecord,
+} from '@/repositories/inventory.repository';
+import {
+  getQuotes as getQuotesFromRepo,
+  getQuoteById as getQuoteByIdFromRepo,
+  createQuote as createQuoteInRepo,
+  updateQuote as updateQuoteInRepo,
+  deleteQuote as deleteQuoteFromRepo,
+} from '@/repositories/quote-repository';
 
-// ─── ITEMS ────────────────────────────────────────────────
+// ─── ITEMS ────────────────────────────────────────────────────────────────────
 
-export async function getItems() {
-  const items = await prisma.inventoryItem.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { materials: { select: { rawMaterialId: true } } },
-  });
-
-  return items.map((item) => ({
-    ...item,
-    category: fromDbCategory(item.category),
-    type: fromDbMaterialType(item.type),
-    materials: item.materials.map((m) => m.rawMaterialId),
-  }));
+export class InventoryError extends Error {
+  constructor(public readonly code: string, message: string) {
+    super(message);
+    this.name = 'InventoryError';
+  }
 }
 
-export async function getItemById(id: string) {
-  const item = await prisma.inventoryItem.findUnique({
-    where: { id },
-    include: { materials: { select: { rawMaterialId: true } } },
-  });
-
-  if (!item) return null;
-
-  return {
-    ...item,
-    category: fromDbCategory(item.category),
-    type: fromDbMaterialType(item.type),
-    materials: item.materials.map((m) => m.rawMaterialId),
-  };
+export async function getItems(): Promise<InventoryItem[]> {
+  return findAllItems();
 }
 
-export async function createItem(data: InventoryItemFormData) {
-  const item = await prisma.inventoryItem.create({
-    data: {
-      name: data.name,
-      category: toDbCategory(data.category) as any,
-      type: toDbMaterialType(data.type) as any,
-      description: data.description,
-      quantityCompleto: data.quantityCompleto,
-      quantitySencillo: data.quantitySencillo,
-      price: data.price,
-      photoUrl: data.photoUrl || null,
-      tags: data.tags ?? [],
-      materials: {
-        create: data.materials.map((rawMaterialId) => ({ rawMaterialId })),
-      },
-    },
-    include: { materials: { select: { rawMaterialId: true } } },
-  });
-
-  return {
-    ...item,
-    category: fromDbCategory(item.category),
-    type: fromDbMaterialType(item.type),
-    materials: item.materials.map((m) => m.rawMaterialId),
-  };
+export async function getItemById(id: string): Promise<InventoryItem | null> {
+  return findItemById(id);
 }
 
-export async function updateItem(id: string, data: InventoryItemFormData) {
-  await prisma.inventoryItemMaterial.deleteMany({ where: { itemId: id } });
-
-  const item = await prisma.inventoryItem.update({
-    where: { id },
-    data: {
-      name: data.name,
-      category: toDbCategory(data.category) as any,
-      type: toDbMaterialType(data.type) as any,
-      description: data.description,
-      quantityCompleto: data.quantityCompleto,
-      quantitySencillo: data.quantitySencillo,
-      price: data.price,
-      photoUrl: data.photoUrl || null,
-      tags: data.tags ?? [],
-      materials: {
-        create: data.materials.map((rawMaterialId) => ({ rawMaterialId })),
-      },
-    },
-    include: { materials: { select: { rawMaterialId: true } } },
-  });
-
-  return {
-    ...item,
-    category: fromDbCategory(item.category),
-    type: fromDbMaterialType(item.type),
-    materials: item.materials.map((m) => m.rawMaterialId),
-  };
+export async function getItemBySlug(slug: string): Promise<InventoryItem | null> {
+  const items = await findAllItems();
+  return items.find((item) => slugifyItemName(item.name) === slug) ?? null;
 }
 
-export async function deleteItem(id: string) {
-  const item = await prisma.inventoryItem.findUnique({ where: { id }, select: { photoUrl: true } });
+export async function createItem(data: ItemCreatePayload): Promise<InventoryItem> {
+  const items = await findAllItems();
+  const targetSlug = slugifyItemName(data.name);
+  if (items.some((item) => slugifyItemName(item.name) === targetSlug)) {
+    throw new InventoryError('DUPLICATE_NAME', `Ya existe un producto con el nombre "${data.name}"`);
+  }
 
-  await prisma.inventoryItemMaterial.deleteMany({ where: { itemId: id } });
-  await prisma.inventoryItem.delete({ where: { id } });
+  if (data.warehouseMaterialId) {
+    const consumed = data.materialConsumedQty ?? 0;
+    const material = await findDesignById(data.warehouseMaterialId);
+    if (!material) {
+      throw new InventoryError('NOT_FOUND', 'Material de almacén no encontrado');
+    }
+    if (consumed > 0 && material.quantity < consumed) {
+      throw new InventoryError(
+        'INSUFFICIENT_STOCK',
+        `Stock insuficiente. Disponible: ${material.quantity}, Requerido: ${consumed}`,
+      );
+    }
+    return createItemAndDeductStock(data, data.warehouseMaterialId, consumed);
+  }
 
-  if (item?.photoUrl) {
+  return createItemWithNewWarehouse(data);
+}
+
+export async function updateItem(id: string, data: InventoryItemFormData): Promise<InventoryItem> {
+  const items = await findAllItems();
+  const targetSlug = slugifyItemName(data.name);
+  if (items.some((item) => item.id !== id && slugifyItemName(item.name) === targetSlug)) {
+    throw new InventoryError('DUPLICATE_NAME', `Ya existe un producto con el nombre "${data.name}"`);
+  }
+  return updateInventoryItem(id, data);
+}
+
+export async function getItemsSalesStats(): Promise<InventoryItemSalesStats[]> {
+  return findItemsSalesStats();
+}
+
+export async function deleteItem(id: string): Promise<void> {
+  const photoUrl = await deleteInventoryItem(id);
+  if (photoUrl) {
     const { deleteCloudinaryImage } = await import('@/lib/utils/cloudinary');
-    await deleteCloudinaryImage(item.photoUrl).catch((err) =>
+    await deleteCloudinaryImage(photoUrl).catch((err) =>
       console.error('Failed to delete Cloudinary image:', err),
     );
   }
 }
 
-// ─── DISEÑOS ──────────────────────────────────────────────
+// ─── DISEÑOS ──────────────────────────────────────────────────────────────────
 
-export async function getDesigns() {
-  const designs = await prisma.rawMaterial.findMany({
-    orderBy: { createdAt: 'desc' },
-  });
-
-  return designs.map((d) => ({ ...d, type: fromDbMaterialType(d.type) }));
+export async function getDesigns(): Promise<RawMaterial[]> {
+  return findAllDesigns();
 }
 
-export async function getDesignById(id: string) {
-  const design = await prisma.rawMaterial.findUnique({ where: { id } });
-  if (!design) return null;
-  return { ...design, type: fromDbMaterialType(design.type) };
+export async function getDesignById(id: string): Promise<RawMaterial | null> {
+  return findDesignById(id);
 }
 
-export async function createDesign(data: RawMaterialFormData) {
-  const design = await prisma.rawMaterial.create({
-    data: {
-      ...data,
-      type: toDbMaterialType(data.type) as any,
-      imageUrl: data.imageUrl || null,
-    },
-  });
-  return { ...design, type: fromDbMaterialType(design.type) };
+export async function createDesign(data: RawMaterialFormData): Promise<RawMaterial> {
+  return createDesignRecord(data);
 }
 
-export async function updateDesign(id: string, data: RawMaterialFormData) {
-  const design = await prisma.rawMaterial.update({
-    where: { id },
-    data: {
-      ...data,
-      type: toDbMaterialType(data.type) as any,
-      imageUrl: data.imageUrl || null,
-    },
-  });
-  return { ...design, type: fromDbMaterialType(design.type) };
+export async function updateDesign(id: string, data: RawMaterialFormData): Promise<RawMaterial> {
+  return updateDesignRecord(id, data);
 }
 
-export async function deleteDesign(id: string) {
-  await prisma.rawMaterial.delete({ where: { id } });
+export async function deleteDesign(id: string): Promise<void> {
+  const linked = await countItemsLinkedToMaterial(id);
+  if (linked > 0) {
+    throw new InventoryError(
+      'MATERIAL_IN_USE',
+      'Este material está vinculado a uno o más productos y no puede eliminarse.',
+    );
+  }
+  return deleteDesignRecord(id);
 }
 
-// ─── PEDIDOS ──────────────────────────────────────────────
-
-function formatOrder(order: any) {
-  return {
-    ...order,
-    materials: order.groups.map((group: any) => ({
-      designs: group.designs.map((d: any) => ({
-        rawMaterialId: d.rawMaterialId ?? '',
-        quantity: d.quantity,
-        addToInventory: d.addToInventory,
-        customDesignName: d.customDesignName,
-        type: d.type ? fromDbMaterialType(d.type) : undefined,
-      })),
-    })),
-    groups: undefined,
-  };
-}
+// ─── PEDIDOS ──────────────────────────────────────────────────────────────────
 
 const orderInclude = {
   groups: { include: { designs: true } },
-};
+} as const;
 
-export async function getOrders() {
+type DbOrder = Prisma.OrderMaterialGetPayload<{
+  include: { groups: { include: { designs: true } } };
+}>;
+
+function mapToOrder(raw: DbOrder): OrderMaterial {
+  return {
+    id: raw.id,
+    distributor: raw.distributor,
+    description: raw.description,
+    status: raw.status as OrderMaterialStatus,
+    trackingNumber: raw.trackingNumber ?? undefined,
+    parcel_service: raw.parcelService as ParcelService | undefined,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+    materials: raw.groups.map((group): OrderMaterialGroup => ({
+      designs: group.designs.map((d): OrderMaterialDesign => ({
+        rawMaterialId: d.rawMaterialId ?? '',
+        quantity: d.quantity,
+        addToInventory: d.addToInventory,
+        customDesignName: d.customDesignName ?? undefined,
+        type: d.type ? (fromDbMaterialType(d.type) as OrderMaterialDesign['type']) : undefined,
+      })),
+    })),
+  };
+}
+
+export async function getOrders(): Promise<OrderMaterial[]> {
   const orders = await prisma.orderMaterial.findMany({
     orderBy: { createdAt: 'desc' },
     include: orderInclude,
   });
-  return orders.map(formatOrder);
+  return orders.map(mapToOrder);
 }
 
-export async function getOrderById(id: string) {
+export async function getOrderById(id: string): Promise<OrderMaterial | null> {
   const order = await prisma.orderMaterial.findUnique({
     where: { id },
     include: orderInclude,
   });
-  if (!order) return null;
-  return formatOrder(order);
+  return order ? mapToOrder(order) : null;
 }
 
-export async function createOrder(data: OrderMaterialFormData) {
+export async function createOrder(data: OrderMaterialFormData): Promise<OrderMaterial> {
   const order = await prisma.orderMaterial.create({
     data: {
       distributor: data.distributor,
@@ -217,7 +222,7 @@ export async function createOrder(data: OrderMaterialFormData) {
               quantity: d.quantity,
               addToInventory: d.addToInventory ?? false,
               customDesignName: d.customDesignName,
-              type: d.type ? toDbMaterialType(d.type) as any : null,
+              type: d.type ? (toDbMaterialType(d.type) as Prisma.OrderMaterialDesignCreateInput['type']) : null,
             })),
           },
         })),
@@ -225,10 +230,10 @@ export async function createOrder(data: OrderMaterialFormData) {
     },
     include: orderInclude,
   });
-  return formatOrder(order);
+  return mapToOrder(order);
 }
 
-export async function updateOrder(id: string, data: OrderMaterialFormData) {
+export async function updateOrder(id: string, data: OrderMaterialFormData): Promise<OrderMaterial> {
   const existingGroups = await prisma.orderMaterialGroup.findMany({
     where: { orderMaterialId: id },
     select: { id: true },
@@ -254,7 +259,7 @@ export async function updateOrder(id: string, data: OrderMaterialFormData) {
               quantity: d.quantity,
               addToInventory: d.addToInventory ?? false,
               customDesignName: d.customDesignName,
-              type: d.type ? toDbMaterialType(d.type) as any : null,
+              type: d.type ? (toDbMaterialType(d.type) as Prisma.OrderMaterialDesignCreateInput['type']) : null,
             })),
           },
         })),
@@ -262,10 +267,10 @@ export async function updateOrder(id: string, data: OrderMaterialFormData) {
     },
     include: orderInclude,
   });
-  return formatOrder(order);
+  return mapToOrder(order);
 }
 
-export async function deleteOrder(id: string) {
+export async function deleteOrder(id: string): Promise<void> {
   const groups = await prisma.orderMaterialGroup.findMany({
     where: { orderMaterialId: id },
     select: { id: true },
@@ -277,34 +282,66 @@ export async function deleteOrder(id: string) {
   await prisma.orderMaterial.delete({ where: { id } });
 }
 
-// ─── ENVIOS ───────────────────────────────────────────────
+// ─── ENVIOS ───────────────────────────────────────────────────────────────────
 
-function formatSale(sale: any) {
+const saleInclude = { saleItems: true, extras: true } as const;
+
+type DbSale = Prisma.SaleGetPayload<{
+  include: { saleItems: true; extras: true };
+}>;
+
+function mapToSale(raw: DbSale): Sale {
   return {
-    ...sale,
-    localShippingOption: sale.localShippingOption
-      ? fromDbLocalShipping(sale.localShippingOption)
+    id: raw.id,
+    name: raw.name,
+    status: raw.status as SaleStatus,
+    socialMediaPlatform: raw.socialMediaPlatform as SocialMediaPlatform,
+    socialMediaUsername: raw.socialMediaUsername,
+    saleRef: raw.saleRef,
+    trackingNumber: raw.trackingNumber ?? undefined,
+    invoiceRequired: raw.invoiceRequired,
+    shippingType: raw.shippingType as ShippingType,
+    localShippingOption: raw.localShippingOption
+      ? (fromDbLocalShipping(raw.localShippingOption) as LocalShippingOption)
       : undefined,
+    localAddress: raw.localAddress ?? undefined,
+    nationalShippingCarrier: raw.nationalShippingCarrier as NationalShippingCarrier | undefined,
+    shippingDescription: raw.shippingDescription ?? undefined,
+    discount: Number(raw.discount),
+    totalAmount: Number(raw.totalAmount),
+    deliveryDate: raw.deliveryDate ?? undefined,
+    saleItems: raw.saleItems.map((si): SaleItem => ({
+      itemId: si.itemId ?? '',
+      quantity: si.quantity,
+      addToInventory: si.addToInventory,
+      customDesignName: si.customDesignName ?? undefined,
+    })),
+    extras: raw.extras.map((e): SaleExtra => ({
+      id: e.id,
+      description: e.description,
+      price: Number(e.price),
+      quantity: e.quantity ?? undefined,
+      discount: e.discount ?? undefined,
+    })),
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
   };
 }
 
-const saleInclude = { saleItems: true, extras: true };
-
-export async function getSales() {
+export async function getSales(): Promise<Sale[]> {
   const sales = await prisma.sale.findMany({
     orderBy: { createdAt: 'desc' },
     include: saleInclude,
   });
-  return sales.map(formatSale);
+  return sales.map(mapToSale);
 }
 
-export async function getSaleById(id: string) {
+export async function getSaleById(id: string): Promise<Sale | null> {
   const sale = await prisma.sale.findUnique({ where: { id }, include: saleInclude });
-  if (!sale) return null;
-  return formatSale(sale);
+  return sale ? mapToSale(sale) : null;
 }
 
-export async function createSale(data: SaleFormData) {
+export async function createSale(data: SaleFormData): Promise<Sale> {
   const sale = await prisma.sale.create({
     data: {
       name: data.name,
@@ -315,7 +352,7 @@ export async function createSale(data: SaleFormData) {
       invoiceRequired: data.invoiceRequired,
       shippingType: data.shippingType,
       localShippingOption: data.localShippingOption
-        ? toDbLocalShipping(data.localShippingOption) as any
+        ? (toDbLocalShipping(data.localShippingOption) as Prisma.SaleCreateInput['localShippingOption'])
         : null,
       localAddress: data.localAddress,
       nationalShippingCarrier: data.nationalShippingCarrier,
@@ -335,17 +372,17 @@ export async function createSale(data: SaleFormData) {
         create: data.extras.map((e) => ({
           description: e.description,
           price: e.price,
-          quantity: e.quantity,
-          discount: e.discount,
+          quantity: e.quantity ?? null,
+          discount: e.discount ?? null,
         })),
       },
     },
     include: saleInclude,
   });
-  return formatSale(sale);
+  return mapToSale(sale);
 }
 
-export async function updateSale(id: string, data: SaleFormData) {
+export async function updateSale(id: string, data: SaleFormData): Promise<Sale> {
   await prisma.saleItem.deleteMany({ where: { saleId: id } });
   await prisma.saleExtra.deleteMany({ where: { saleId: id } });
 
@@ -360,7 +397,7 @@ export async function updateSale(id: string, data: SaleFormData) {
       invoiceRequired: data.invoiceRequired,
       shippingType: data.shippingType,
       localShippingOption: data.localShippingOption
-        ? toDbLocalShipping(data.localShippingOption) as any
+        ? (toDbLocalShipping(data.localShippingOption) as Prisma.SaleUpdateInput['localShippingOption'])
         : null,
       localAddress: data.localAddress,
       nationalShippingCarrier: data.nationalShippingCarrier,
@@ -380,152 +417,78 @@ export async function updateSale(id: string, data: SaleFormData) {
         create: data.extras.map((e) => ({
           description: e.description,
           price: e.price,
-          quantity: e.quantity,
-          discount: e.discount,
+          quantity: e.quantity ?? null,
+          discount: e.discount ?? null,
         })),
       },
     },
     include: saleInclude,
   });
-  return formatSale(sale);
+  return mapToSale(sale);
 }
 
-export async function deleteSale(id: string) {
+export async function deleteSale(id: string): Promise<void> {
   await prisma.saleItem.deleteMany({ where: { saleId: id } });
   await prisma.saleExtra.deleteMany({ where: { saleId: id } });
   await prisma.sale.delete({ where: { id } });
 }
 
-// ─── COTIZACIONES ─────────────────────────────────────────
+// ─── COTIZACIONES ─────────────────────────────────────────────────────────────
 
-function formatQuote(quote: any) {
-  return {
-    ...quote,
-    paymentMethod: quote.paymentMethod.replace(/_/g, ' '),
-  };
+export async function getQuotes(): Promise<Quote[]> {
+  return getQuotesFromRepo();
 }
 
-const quoteInclude = { items: true, extras: true };
-
-export async function getQuotes() {
-  const quotes = await prisma.quote.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: quoteInclude,
-  });
-  return quotes.map(formatQuote);
+export async function getQuoteById(id: string): Promise<Quote | null> {
+  return getQuoteByIdFromRepo(id);
 }
 
-export async function getQuoteById(id: string) {
-  const quote = await prisma.quote.findUnique({ where: { id }, include: quoteInclude });
-  if (!quote) return null;
-  return formatQuote(quote);
-}
-
-export async function createQuote(data: QuoteFormData) {
-  const quoteNumber = generateQuoteNumber();
-
+export async function createQuote(data: QuoteFormData): Promise<Quote> {
   const subtotal =
-    data.items.reduce((sum, item) => sum + item.unitPrice * item.quantity - (item.discount ?? 0), 0) +
-    data.extras.reduce((sum, e) => sum + e.price * (e.quantity ?? 1) - (e.discount ?? 0), 0);
+    data.items.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity - (item.discount ?? 0),
+      0,
+    ) +
+    data.extras.reduce(
+      (sum, e) => sum + e.price * (e.quantity ?? 1) - (e.discount ?? 0),
+      0,
+    );
 
   const totalAmount = subtotal - (data.discount ?? 0);
 
-  const quote = await prisma.quote.create({
-    data: {
-      quoteNumber,
-      clientName: data.clientName,
-      clientEmail: data.clientEmail,
-      clientPhone: data.clientPhone,
-      clientCompany: data.clientCompany,
-      status: data.status,
-      validUntil: new Date(data.validUntil),
-      subtotal,
-      discount: data.discount ?? 0,
-      totalAmount,
-      notes: data.notes,
-      iva: data.iva,
-      includingIva: data.includingIva ?? false,
-      paymentMethod: data.paymentMethod.replace(/ /g, '_') as any,
-      items: {
-        create: data.items.map((item) => ({
-          itemId: item.itemId || null,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          description: item.description,
-          discount: item.discount,
-          manualName: item.manualName,
-          manualCategory: item.manualCategory,
-          manualType: item.manualType,
-        })),
-      },
-      extras: {
-        create: data.extras.map((e) => ({
-          description: e.description,
-          price: e.price,
-          quantity: e.quantity,
-          discount: e.discount,
-        })),
-      },
-    },
-    include: quoteInclude,
-  });
-  return formatQuote(quote);
+  return createQuoteInRepo({ ...data, subtotal, totalAmount });
 }
 
-export async function updateQuote(id: string, data: QuoteFormData) {
-  await prisma.quoteItem.deleteMany({ where: { quoteId: id } });
-  await prisma.quoteExtra.deleteMany({ where: { quoteId: id } });
-
+export async function updateQuote(id: string, data: QuoteFormData): Promise<Quote> {
   const subtotal =
-    data.items.reduce((sum, item) => sum + item.unitPrice * item.quantity - (item.discount ?? 0), 0) +
-    data.extras.reduce((sum, e) => sum + e.price * (e.quantity ?? 1) - (e.discount ?? 0), 0);
+    data.items.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity - (item.discount ?? 0),
+      0,
+    ) +
+    data.extras.reduce(
+      (sum, e) => sum + e.price * (e.quantity ?? 1) - (e.discount ?? 0),
+      0,
+    );
 
   const totalAmount = subtotal - (data.discount ?? 0);
 
-  const quote = await prisma.quote.update({
-    where: { id },
-    data: {
-      clientName: data.clientName,
-      clientEmail: data.clientEmail,
-      clientPhone: data.clientPhone,
-      clientCompany: data.clientCompany,
-      status: data.status,
-      validUntil: new Date(data.validUntil),
-      subtotal,
-      discount: data.discount ?? 0,
-      totalAmount,
-      notes: data.notes,
-      iva: data.iva,
-      includingIva: data.includingIva ?? false,
-      paymentMethod: data.paymentMethod.replace(/ /g, '_') as any,
-      items: {
-        create: data.items.map((item) => ({
-          itemId: item.itemId || null,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          description: item.description,
-          discount: item.discount,
-          manualName: item.manualName,
-          manualCategory: item.manualCategory,
-          manualType: item.manualType,
-        })),
-      },
-      extras: {
-        create: data.extras.map((e) => ({
-          description: e.description,
-          price: e.price,
-          quantity: e.quantity,
-          discount: e.discount,
-        })),
-      },
-    },
-    include: quoteInclude,
-  });
-  return formatQuote(quote);
+  return updateQuoteInRepo(id, { ...data, subtotal, totalAmount });
 }
 
-export async function deleteQuote(id: string) {
-  await prisma.quoteItem.deleteMany({ where: { quoteId: id } });
-  await prisma.quoteExtra.deleteMany({ where: { quoteId: id } });
-  await prisma.quote.delete({ where: { id } });
+export async function deleteQuote(id: string): Promise<void> {
+  return deleteQuoteFromRepo(id);
+}
+
+// ─── VENTAS (Store Orders) ────────────────────────────────────────────────────
+
+export async function getStoreOrders(): Promise<StoreOrder[]> {
+  return findAllStoreOrders();
+}
+
+export async function getStoreOrderById(id: string): Promise<StoreOrder | null> {
+  return findStoreOrderById(id);
+}
+
+export async function updateStoreOrder(id: string, data: StoreOrderUpdateData): Promise<StoreOrder> {
+  return updateStoreOrderRecord(id, data);
 }

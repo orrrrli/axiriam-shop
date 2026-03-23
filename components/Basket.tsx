@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Minus, Plus } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, ArrowRight, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import ImageLoader from './ImageLoader';
 import { useCartStore, CartItem } from '@/lib/store/cartStore';
@@ -14,10 +14,10 @@ interface BasketProps {
 }
 
 const Basket: React.FC<BasketProps> = ({ isOpen, onClose }) => {
-  const items = useCartStore((state) => state.items);
-  const clearCart = useCartStore((state) => state.clearCart);
+  const items         = useCartStore((state) => state.items);
+  const clearCart     = useCartStore((state) => state.clearCart);
   const getTotalPrice = useCartStore((state) => state.getTotalPrice);
-  const router = useRouter();
+  const router        = useRouter();
 
   const onCheckOut = () => {
     if (items.length === 0) return;
@@ -25,90 +25,148 @@ const Basket: React.FC<BasketProps> = ({ isOpen, onClose }) => {
     router.push('/checkout');
   };
 
-  const onClearBasket = () => {
-    if (items.length > 0) clearCart();
-  };
+  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
     <>
-      {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-[59] transition-opacity"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Drawer */}
+      {/* ── Backdrop ── */}
       <div
-        className={`fixed top-0 right-0 w-[60rem] h-screen bg-white z-basket shadow-[-10px_0_15px_rgba(0,0,0,0.08)] transition-transform duration-500 ease-bezier
-          max-xs:w-full
-          ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed inset-0 z-[59] bg-black transition-opacity duration-300
+          ${isOpen ? 'opacity-40 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={onClose}
+      />
+
+      {/* ── Drawer ── */}
+      <div
+        className={`
+          fixed top-0 right-0 h-screen z-[60]
+          w-[46rem] max-xs:w-full
+          bg-white flex flex-col
+          shadow-[-20px_0_60px_rgba(0,0,0,0.1)]
+          transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+          ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+        `}
       >
-        {/* Scrollable list area */}
-        <div className="p-[1.6rem] pb-[120px] overflow-y-auto h-full flex flex-col">
-          {/* Header */}
-          <div className="flex items-center sticky top-[-20px] bg-white z-basket pb-[1rem]">
-            <h3 className="flex-grow text-heading text-[1.8rem] m-0">
-              My Basket&nbsp;
-              <span className="text-[1.4rem] text-gray-10 font-normal">
-                ({items.length} {items.length === 1 ? 'item' : 'items'})
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between px-[2.4rem] py-[2rem] border-b border-[#f0f0f0] shrink-0">
+          <div className="flex items-center gap-[1rem]">
+            <ShoppingBag size={18} strokeWidth={1.8} className="text-[#101010]" />
+            <span className="text-[1.6rem] font-semibold text-[#101010] [font-family:var(--font-inter)]">
+              Mi carrito
+            </span>
+            {totalItems > 0 && (
+              <span className="inline-flex items-center justify-center w-[2.2rem] h-[2.2rem] rounded-full bg-[#101010] text-white text-[1.1rem] font-bold [font-family:var(--font-inter)]">
+                {totalItems}
               </span>
-            </h3>
+            )}
+          </div>
+
+          <div className="flex items-center gap-[1.2rem]">
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={clearCart}
+                className="flex items-center gap-[0.4rem] text-[1.2rem] text-[rgba(0,0,0,0.4)] hover:text-[#e53e3e] transition-colors duration-150 [font-family:var(--font-inter)]"
+              >
+                <Trash2 size={13} strokeWidth={1.8} />
+                Vaciar
+              </button>
+            )}
             <button
-              className="button button-border button-border-gray button-small mr-[1rem]"
+              type="button"
               onClick={onClose}
-              type="button"
+              className="w-[3.2rem] h-[3.2rem] rounded-full bg-[#f5f5f5] flex items-center justify-center hover:bg-[#ebebeb] transition-colors duration-150"
             >
-              Close
-            </button>
-            <button
-              className="button button-border button-border-gray button-small"
-              disabled={items.length === 0}
-              onClick={onClearBasket}
-              type="button"
-            >
-              Clear Basket
+              <X size={15} strokeWidth={2} className="text-[#101010]" />
             </button>
           </div>
+        </div>
+
+        {/* ── Items list ── */}
+        <div className="flex-1 overflow-y-auto px-[2.4rem] py-[2rem]">
 
           {/* Empty state */}
           {items.length === 0 && (
-            <div className="flex-grow flex justify-center items-center">
-              <h5 className="text-gray-10 text-[1.4rem]">Your basket is empty</h5>
+            <div className="h-full flex flex-col items-center justify-center gap-[1.6rem] text-center">
+              <div className="w-[6rem] h-[6rem] rounded-full bg-[#f5f5f5] flex items-center justify-center">
+                <ShoppingBag size={26} strokeWidth={1.5} className="text-[rgba(0,0,0,0.3)]" />
+              </div>
+              <div>
+                <p className="text-[1.6rem] font-semibold text-[#101010] m-0 [font-family:var(--font-inter)]">
+                  Tu carrito está vacío
+                </p>
+                <p className="text-[1.3rem] text-[rgba(0,0,0,0.4)] mt-[0.4rem] [font-family:var(--font-inter)]">
+                  Agrega productos desde el catálogo
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-[2rem] py-[1rem] rounded-full bg-[#101010] text-white text-[1.3rem] font-medium [font-family:var(--font-inter)]"
+              >
+                Ver catálogo
+              </button>
             </div>
           )}
 
-          {/* Basket items */}
-          {items.map((item) => (
-            <BasketItem key={item.id} item={item} onClose={onClose} />
-          ))}
+          {/* Items */}
+          {items.length > 0 && (
+            <div className="flex flex-col gap-[0.8rem]">
+              {items.map((item) => (
+                <BasketItem key={item.id} item={item} onClose={onClose} />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Checkout footer */}
-        <div className="absolute bottom-0 right-0 w-full bg-white p-[1.6rem] flex items-center justify-between
-          before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:mx-auto before:w-[93%] before:h-px before:bg-border">
-          <div>
-            <p className="text-[1.2rem] text-paragraph m-0">Subtotal Amount:</p>
-            <h2 className="text-heading text-[2rem] my-[0.5rem]">
-              {formatPrice(getTotalPrice())}
-            </h2>
+        {/* ── Footer / checkout ── */}
+        {items.length > 0 && (
+          <div className="shrink-0 px-[2.4rem] py-[2.4rem] border-t border-[#f0f0f0] bg-white">
+            <div className="flex items-center justify-between mb-[0.6rem]">
+              <span className="text-[1.3rem] text-[rgba(0,0,0,0.5)] [font-family:var(--font-inter)]">
+                Subtotal
+              </span>
+              <span className="text-[2rem] font-bold text-[#101010] [font-family:var(--font-inter)]">
+                {formatPrice(getTotalPrice())}
+              </span>
+            </div>
+            <p className="text-[1.2rem] text-[rgba(0,0,0,0.35)] mb-[2rem] [font-family:var(--font-inter)]">
+              Envío calculado en el siguiente paso
+            </p>
+
+            <button
+              type="button"
+              onClick={onCheckOut}
+              className="
+                w-full flex items-center justify-center gap-[0.8rem]
+                py-[1.5rem] rounded-[1rem] bg-[#101010] text-white
+                text-[1.4rem] font-semibold tracking-tight
+                hover:bg-[#222] active:scale-[0.99]
+                transition-all duration-200
+                [font-family:var(--font-inter)]
+              "
+            >
+              Ir al checkout
+              <ArrowRight size={16} strokeWidth={2} />
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full mt-[1rem] py-[1.2rem] text-[1.3rem] text-[rgba(0,0,0,0.45)] hover:text-[#101010] transition-colors duration-150 [font-family:var(--font-inter)]"
+            >
+              Seguir comprando
+            </button>
           </div>
-          <button
-            className="button text-[1.6rem] uppercase px-[3rem] py-[1.6rem]"
-            disabled={items.length === 0}
-            onClick={onCheckOut}
-            type="button"
-          >
-            Check Out
-          </button>
-        </div>
+        )}
       </div>
     </>
   );
 };
 
-// --- BasketItem ---
+// ─────────────────────────────────────────────
+// BasketItem
+// ─────────────────────────────────────────────
 
 interface BasketItemProps {
   item: CartItem;
@@ -116,94 +174,79 @@ interface BasketItemProps {
 }
 
 const BasketItem: React.FC<BasketItemProps> = ({ item, onClose }) => {
-  const removeItem = useCartStore((state) => state.removeItem);
+  const removeItem     = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
 
-  const onAddQty = () => {
-    updateQuantity(item.id, item.quantity + 1);
-  };
-
-  const onMinusQty = () => {
-    if (item.quantity > 1) {
-      updateQuantity(item.id, item.quantity - 1);
-    }
-  };
-
-  const onRemove = () => {
-    removeItem(item.id);
-  };
-
   return (
-    <div className="flex items-center border border-border mb-[1.2rem] animate-slide-up">
-      {/* Quantity controls */}
-      <div className="w-[30px] h-[90px] flex flex-col items-center">
-        <button
-          className="button button-border button-border-gray w-[35px] h-full p-[5px] !text-[9px]"
-          onClick={onAddQty}
-          type="button"
-        >
-          <Plus size={9} />
-        </button>
-        <button
-          className="button button-border button-border-gray w-[35px] h-full p-[5px] !text-[9px]"
-          disabled={item.quantity <= 1}
-          onClick={onMinusQty}
-          type="button"
-        >
-          <Minus size={9} />
-        </button>
-      </div>
+    <div className="
+      flex items-center gap-[1.4rem] p-[1.2rem]
+      rounded-[1.2rem] bg-[#fafafa] border border-[#f0f0f0]
+      hover:border-[#e0e0e0] hover:bg-[#f7f7f7]
+      transition-all duration-200
+    ">
+      {/* Image */}
+      <Link
+        href={`/catalogo/${item.id}`}
+        onClick={onClose}
+        className="shrink-0 w-[7rem] h-[7rem] rounded-[0.8rem] bg-white border border-[#eee] overflow-hidden flex items-center justify-center"
+      >
+        <ImageLoader
+          alt={item.name}
+          src={item.image}
+          className="w-full h-full object-contain p-[0.6rem]"
+        />
+      </Link>
 
-      {/* Item details */}
-      <div className="w-full grid grid-cols-[90px_1fr_80px_40px] items-center px-[1.2rem]">
-        {/* Image */}
-        <div className="w-[90px] h-[90px] mr-[1.6rem] relative">
-          <ImageLoader
-            alt={item.name}
-            className="w-full h-full object-contain"
-            src={item.image}
-          />
-        </div>
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <Link href={`/catalogo/${item.id}`} onClick={onClose} className="no-underline">
+          <p className="text-[1.35rem] font-semibold text-[#101010] truncate m-0 leading-snug [font-family:var(--font-source-sans)] hover:underline">
+            {item.name}
+          </p>
+        </Link>
+        <p className="text-[1.15rem] text-[rgba(0,0,0,0.4)] mt-[0.2rem] capitalize m-0 [font-family:var(--font-inter)]">
+          {item.category}
+        </p>
 
-        {/* Name + specs */}
-        <div className="flex-grow">
-          <Link
-            href={`/shop/${item.id}`}
-            onClick={onClose}
-            className="no-underline"
-          >
-            <h4 className="underline text-heading text-[1.3rem] my-[0.5rem] w-[142px] whitespace-nowrap overflow-hidden text-ellipsis">
-              {item.name}
-            </h4>
-          </Link>
-          <div className="grid grid-cols-2 gap-[0.5rem]">
-            <div>
-              <span className="text-[1.1rem] text-gray-10 block mb-[0.3rem]">Quantity</span>
-              <h5 className="my-0 text-[1.3rem] text-heading">{item.quantity}</h5>
-            </div>
-            <div>
-              <span className="text-[1.1rem] text-gray-10 block mb-[0.3rem]">Category</span>
-              <h5 className="my-0 text-[1.3rem] text-heading">{item.category}</h5>
-            </div>
+        {/* Qty + price */}
+        <div className="flex items-center justify-between mt-[1rem]">
+          {/* Stepper */}
+          <div className="flex items-center rounded-full border border-[#e8e8e8] bg-white overflow-hidden">
+            <button
+              type="button"
+              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+              disabled={item.quantity <= 1}
+              className="w-[3rem] h-[3rem] flex items-center justify-center text-[#101010] hover:bg-[#f5f5f5] disabled:opacity-30 transition-colors duration-150"
+            >
+              <Minus size={12} strokeWidth={2.5} />
+            </button>
+            <span className="w-[3rem] text-center text-[1.3rem] font-semibold text-[#101010] [font-family:var(--font-inter)]">
+              {item.quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+              className="w-[3rem] h-[3rem] flex items-center justify-center text-[#101010] hover:bg-[#f5f5f5] transition-colors duration-150"
+            >
+              <Plus size={12} strokeWidth={2.5} />
+            </button>
           </div>
-        </div>
 
-        {/* Price */}
-        <div className="mr-[2rem]">
-          <h4 className="my-0 text-[1.4rem] text-heading">
+          {/* Price */}
+          <span className="text-[1.4rem] font-bold text-[#101010] [font-family:var(--font-inter)]">
             {formatPrice(item.price * item.quantity)}
-          </h4>
+          </span>
         </div>
-
-        {/* Remove */}
-        <button
-          className="button button-border button-border-gray button-small self-center !p-[0.8rem]"
-          onClick={onRemove}
-          type="button"
-        >
-          <X size={12} />
-        </button>
       </div>
+
+      {/* Remove */}
+      <button
+        type="button"
+        onClick={() => removeItem(item.id)}
+        className="shrink-0 w-[3rem] h-[3rem] rounded-full flex items-center justify-center text-[rgba(0,0,0,0.3)] hover:text-[#e53e3e] hover:bg-[#fff0f0] transition-all duration-150"
+      >
+        <X size={14} strokeWidth={2} />
+      </button>
     </div>
   );
 };

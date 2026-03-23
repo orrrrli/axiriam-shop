@@ -192,7 +192,7 @@ export default function HeroSection(): React.ReactElement {
           }}
         >
           <TransitionLink
-            href="/shop"
+            href="/catalogo"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -223,7 +223,7 @@ export default function HeroSection(): React.ReactElement {
           </TransitionLink>
 
           <TransitionLink
-            href="/shop?category=gorros"
+            href="/catalogo?category=gorros"
             style={{
               display: 'inline-flex',
               alignItems: 'center',

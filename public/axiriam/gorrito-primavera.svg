@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="#f7f8fa"/>
+  <ellipse cx="300" cy="390" rx="160" ry="22" fill="#000" opacity="0.05"/>
+  <path d="M140 358 Q145 248 300 198 Q455 248 460 358 Q420 383 300 386 Q180 383 140 358Z" fill="#FFDDD2" opacity="0.95"/>
+  <path d="M140 358 Q220 373 300 376 Q380 373 460 358 Q420 383 300 386 Q180 383 140 358Z" fill="#FFC4B0" opacity="0.65"/>
+  <!-- Floral pattern -->
+  <circle cx="210" cy="295" r="14" fill="#FFB3BA" opacity="0.6"/>
+  <circle cx="210" cy="295" r="7" fill="#FF8FA3" opacity="0.5"/>
+  <circle cx="250" cy="268" r="11" fill="#FFB3BA" opacity="0.55"/>
+  <circle cx="250" cy="268" r="5.5" fill="#FF8FA3" opacity="0.45"/>
+  <circle cx="350" cy="272" r="13" fill="#FFB3BA" opacity="0.6"/>
+  <circle cx="350" cy="272" r="6.5" fill="#FF8FA3" opacity="0.5"/>
+  <circle cx="390" cy="300" r="10" fill="#FFB3BA" opacity="0.55"/>
+  <circle cx="390" cy="300" r="5" fill="#FF8FA3" opacity="0.45"/>
+  <circle cx="300" cy="255" r="12" fill="#FFB3BA" opacity="0.5"/>
+  <circle cx="300" cy="255" r="6" fill="#FF8FA3" opacity="0.4"/>
+  <path d="M140 358 Q108 368 88 388" fill="none" stroke="#FFC4B0" stroke-width="5" stroke-linecap="round"/>
+  <path d="M460 358 Q492 368 512 388" fill="none" stroke="#FFC4B0" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="300" cy="200" r="13" fill="#FFC4B0" opacity="0.9"/>
+  <circle cx="300" cy="200" r="6" fill="white" opacity="0.5"/>
+</svg>

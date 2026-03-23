@@ -30,12 +30,12 @@ const PAYMENT_METHODS: PaymentMethod[] = [
 const STATUS_OPTIONS: QuoteStatus[] = ['draft', 'sent', 'accepted'];
 
 const INPUT =
-  'w-full bg-[#f5f5f5] border-0 border-b border-gray-300 px-[1.2rem] py-[1rem] text-[1.4rem] text-heading focus:outline-none focus:border-blue-500 transition-colors duration-150 placeholder:text-gray-400';
+  'w-full bg-[#f5f5f5] rounded-none border-0 border-b border-gray-300 px-[1.2rem] py-[1rem] text-[1.4rem] text-heading focus:outline-none focus:border-blue-500 transition-colors duration-150 placeholder:text-gray-400';
 
 const SELECT = `${INPUT} appearance-none pr-[3.6rem] cursor-pointer`;
 
 const CELL_INPUT =
-  'w-full bg-transparent border-0 border-b border-gray-200 px-[0.8rem] py-[0.6rem] text-[1.3rem] text-heading focus:outline-none focus:border-blue-500 transition-colors duration-150 placeholder:text-gray-400';
+  'w-full bg-transparent rounded-none border-0 border-b border-gray-200 px-[0.8rem] py-[0.6rem] text-[1.3rem] text-heading focus:outline-none focus:border-blue-500 transition-colors duration-150 placeholder:text-gray-400';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

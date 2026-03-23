@@ -1,4 +1,9 @@
-import { SaleFormData, SaleStatus } from '@/types/inventory';
+import {
+  LocalShippingOption,
+  NationalShippingCarrier,
+  SaleFormData,
+  SaleStatus,
+} from '@/types/inventory';
 
 /**
  * Display labels for sale status values
@@ -37,6 +42,18 @@ export const PLATFORM_ICONS: Record<string, string> = {
 export const SHIPPING_LABELS: Record<string, string> = {
   local: 'Local',
   nacional: 'Nacional',
+};
+
+export const LOCAL_SHIPPING_LABELS: Record<LocalShippingOption, string> = {
+  'meeting-point': 'Punto de encuentro',
+  pzexpress: 'PZ Express',
+};
+
+export const CARRIER_LABELS: Record<NationalShippingCarrier, string> = {
+  estafeta: 'Estafeta',
+  dhl: 'DHL',
+  fedex: 'FedEx',
+  correos: 'Correos de México',
 };
 
 /**

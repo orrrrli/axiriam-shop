@@ -13,6 +13,7 @@ import {
   LogOut,
   Settings,
   LayoutGrid,
+  ShoppingCart,
 } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { getDemoSession, demoSignOut } from '@/lib/demoAuth';
@@ -23,8 +24,9 @@ const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 const navItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Productos', href: '/admin/inventory/items', icon: ShoppingBag },
-  { label: 'Almacén', href: '/admin/inventory/telas', icon: Warehouse },
+  { label: 'Almacén', href: '/admin/inventory/warehouse', icon: Warehouse },
   { label: 'Pedidos', href: '/admin/inventory/orders', icon: ClipboardList },
+  { label: 'Ventas', href: '/admin/inventory/ventas', icon: ShoppingCart },
   { label: 'Envíos', href: '/admin/inventory/sales', icon: Truck },
   { label: 'Cotizaciones', href: '/admin/inventory/quotes', icon: FileText },
 ];

@@ -11,14 +11,24 @@ interface ItemDetailProps {
   item: InventoryItem;
 }
 
-function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }): React.ReactElement {
+function InfoCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}): React.ReactElement {
   return (
     <div className="flex items-start gap-[1.2rem] p-[1.6rem] bg-white border border-gray-100 rounded-[1rem]">
       <div className="w-[3.6rem] h-[3.6rem] rounded-[0.8rem] bg-[#f5f5f5] flex items-center justify-center shrink-0 text-gray-400">
         {icon}
       </div>
       <div>
-        <p className="text-[1.15rem] font-medium text-gray-400 uppercase tracking-wide mb-[0.2rem]">{label}</p>
+        <p className="text-[1.15rem] font-medium text-gray-400 uppercase tracking-wide mb-[0.2rem]">
+          {label}
+        </p>
         <div className="text-[1.4rem] font-semibold text-[#101010]">{value}</div>
       </div>
     </div>
@@ -32,7 +42,6 @@ export default function ItemDetail({ item }: ItemDetailProps): React.ReactElemen
 
   return (
     <div className="w-full max-w-[96rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
-
       {/* Back + Header */}
       <div className="flex items-center gap-[1.6rem] mb-[3rem]">
         <button
@@ -59,7 +68,7 @@ export default function ItemDetail({ item }: ItemDetailProps): React.ReactElemen
         </div>
         <button
           type="button"
-          onClick={() => router.push(`/admin/inventory/items`)}
+          onClick={() => router.push('/admin/inventory/items')}
           className="button button-muted text-[1.3rem]"
         >
           Ver todos
@@ -68,7 +77,6 @@ export default function ItemDetail({ item }: ItemDetailProps): React.ReactElemen
 
       {/* Main grid */}
       <div className="grid grid-cols-[1fr_2fr] gap-[2.4rem] max-xs:grid-cols-1">
-
         {/* Left: Photo + Tags */}
         <div className="flex flex-col gap-[2rem]">
           {/* Photo */}
@@ -147,7 +155,9 @@ export default function ItemDetail({ item }: ItemDetailProps): React.ReactElemen
               <h2 className="text-[1.4rem] font-semibold text-[#101010]">Notas</h2>
             </div>
             {item.description ? (
-              <p className="text-[1.4rem] text-paragraph leading-relaxed whitespace-pre-wrap">{item.description}</p>
+              <p className="text-[1.4rem] text-paragraph leading-relaxed whitespace-pre-wrap">
+                {item.description}
+              </p>
             ) : (
               <p className="text-[1.3rem] text-gray-400">Sin notas</p>
             )}

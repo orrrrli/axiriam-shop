@@ -22,7 +22,7 @@ export function FormTextarea({
   return (
     <textarea
       className={cn(
-        'w-full border border-border px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-border-focus disabled:bg-body-alt disabled:cursor-not-allowed resize-vertical',
+        'w-full bg-white border border-border rounded-[0.4rem] px-[1.6rem] py-[1.2rem] text-[1.4rem] text-heading focus:outline-none focus:border-admin-active-border transition-colors duration-150 disabled:bg-body-alt disabled:cursor-not-allowed resize-vertical',
         className
       )}
       value={value}

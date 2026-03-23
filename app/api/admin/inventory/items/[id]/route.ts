@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getItemById, updateItem, deleteItem } from '@/lib/services/inventory.service';
+import { getItemById, updateItem, deleteItem, InventoryError } from '@/lib/services/inventory.service';
 import { validateItemBody } from '@/lib/utils/inventory';
 
 async function requireAdmin() {
@@ -34,6 +34,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
     return NextResponse.json({ item: await updateItem(id, body) });
   } catch (error) {
+    if (error instanceof InventoryError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 409 });
+    }
     console.error('PUT /api/admin/inventory/items/[id]:', error);
     return NextResponse.json({ error: 'Failed to update item' }, { status: 500 });
   }

@@ -3,12 +3,32 @@
 import { useTransitionContext } from './TransitionContext';
 import { useTransitionStore } from '@/lib/store/transitionStore';
 import BrandSpinner from './BrandSpinner';
+import ItemDetailSkeleton from '@/components/admin/inventory/items/ItemDetailSkeleton';
 
 export default function AdminTransitionOverlay() {
   const { reducedMotion } = useTransitionContext();
   const isNavigating = useTransitionStore((s) => s.isNavigating);
+  const navigationType = useTransitionStore((s) => s.navigationType);
 
   if (!isNavigating) return null;
+
+  if (navigationType === 'item-detail') {
+    return (
+      <div
+        role="status"
+        aria-busy
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 50,
+          backgroundColor: '#F5F7FA',
+          overflowY: 'auto',
+        }}
+      >
+        <ItemDetailSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div

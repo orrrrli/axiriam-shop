@@ -16,6 +16,10 @@ interface DataTableProps<T extends { id: string }> {
   onDelete?: (item: T) => void;
   onRowClick?: (item: T) => void;
   deletingId?: string | null;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function DataTable<T extends { id: string }>({
@@ -27,8 +31,15 @@ export function DataTable<T extends { id: string }>({
   onDelete,
   onRowClick,
   deletingId,
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
 }: DataTableProps<T>): React.ReactElement {
-  const hasActions = onEdit || onDelete;
+  const hasActions = (onEdit || onDelete) && !selectionMode;
+  const allSelected = data.length > 0 && selectedIds?.size === data.length;
+  const someSelected = (selectedIds?.size ?? 0) > 0 && !allSelected;
+
   const displayColumns = hasActions
     ? [...columns, { header: 'Acciones', key: '__actions__' }]
     : columns;
@@ -39,6 +50,23 @@ export function DataTable<T extends { id: string }>({
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
+              {selectionMode && (
+                <th className="py-[1.2rem] px-[2rem] w-[4rem]">
+                  <button
+                    type="button"
+                    onClick={onToggleSelectAll}
+                    className="flex items-center justify-center w-[1.8rem] h-[1.8rem] rounded-[0.4rem] border-[1.5px] border-border hover:border-heading transition-colors duration-150 relative"
+                    aria-label="Seleccionar todo"
+                  >
+                    {allSelected && (
+                      <span className="block w-[1rem] h-[1rem] bg-heading rounded-[0.2rem]" />
+                    )}
+                    {someSelected && (
+                      <span className="block w-[1rem] h-[0.2rem] bg-heading rounded-full" />
+                    )}
+                  </button>
+                </th>
+              )}
               {displayColumns.map((col) => (
                 <th
                   key={col.key}
@@ -53,7 +81,7 @@ export function DataTable<T extends { id: string }>({
             {data.length === 0 && (
               <tr>
                 <td
-                  colSpan={displayColumns.length}
+                  colSpan={displayColumns.length + (selectionMode ? 1 : 0)}
                   className="py-[6rem]"
                 >
                   <div className="flex flex-col items-center justify-center gap-[1.2rem] text-admin-muted">
@@ -63,31 +91,65 @@ export function DataTable<T extends { id: string }>({
                 </td>
               </tr>
             )}
-            {data.map((row) => (
-              <tr
-                key={row.id}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={`border-b border-border last:border-b-0 hover:bg-admin-bg transition-colors duration-200${onRowClick ? ' cursor-pointer' : ''}`}
-              >
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph"
-                  >
-                    {col.render ? col.render(row[col.key as keyof T], row) : String(row[col.key as keyof T] ?? '')}
-                  </td>
-                ))}
-                {hasActions && (
-                  <td className="py-[1.2rem] px-[2rem]">
-                    <ActionButtons
-                      onEdit={() => onEdit?.(row)}
-                      onDelete={() => onDelete?.(row)}
-                      isDeleting={deletingId === row.id}
-                    />
-                  </td>
-                )}
-              </tr>
-            ))}
+            {data.map((row) => {
+              const isSelected = selectedIds?.has(row.id) ?? false;
+              return (
+                <tr
+                  key={row.id}
+                  onClick={
+                    selectionMode
+                      ? () => onToggleSelect?.(row.id)
+                      : onRowClick
+                      ? () => onRowClick(row)
+                      : undefined
+                  }
+                  className={`border-b border-border last:border-b-0 transition-colors duration-150 ${
+                    selectionMode
+                      ? isSelected
+                        ? 'bg-[#f0f4ff] cursor-pointer'
+                        : 'hover:bg-[#fafafa] cursor-pointer'
+                      : onRowClick
+                      ? 'hover:bg-admin-bg cursor-pointer'
+                      : 'hover:bg-admin-bg'
+                  }`}
+                >
+                  {selectionMode && (
+                    <td className="py-[1.2rem] px-[2rem] w-[4rem]">
+                      <div
+                        className={`flex items-center justify-center w-[1.8rem] h-[1.8rem] rounded-[0.4rem] border-[1.5px] transition-all duration-150 ${
+                          isSelected
+                            ? 'bg-heading border-heading'
+                            : 'border-border'
+                        }`}
+                      >
+                        {isSelected && (
+                          <svg viewBox="0 0 10 8" className="w-[1rem] h-[0.8rem] fill-none stroke-white stroke-[1.5]">
+                            <path d="M1 4l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className="py-[1.2rem] px-[2rem] text-[1.3rem] text-paragraph"
+                    >
+                      {col.render ? col.render(row[col.key as keyof T], row) : String(row[col.key as keyof T] ?? '')}
+                    </td>
+                  ))}
+                  {hasActions && (
+                    <td className="py-[1.2rem] px-[2rem]">
+                      <ActionButtons
+                        onEdit={() => onEdit?.(row)}
+                        onDelete={() => onDelete?.(row)}
+                        isDeleting={deletingId === row.id}
+                      />
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

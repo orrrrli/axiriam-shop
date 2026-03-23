@@ -156,9 +156,9 @@ const Navbar = () => {
         </li>
         <li className="inline-block">
           <Link
-            href="/shop"
+            href="/catalogo"
             className={`px-[15px] py-[10px] text-[1.4rem] no-underline hover:bg-body-alt transition-colors
-              ${pathname === '/shop' || pathname.startsWith('/shop') ? 'font-bold opacity-100' : 'opacity-50'}`}
+              ${pathname === '/catalogo' || pathname.startsWith('/catalogo') ? 'font-bold opacity-100' : 'opacity-50'}`}
           >
             Shop
           </Link>
@@ -166,7 +166,7 @@ const Navbar = () => {
       </ul>
 
       {/* Search + Filter (show on shop page) */}
-      {(pathname === '/shop' || pathname.startsWith('/shop')) && (
+      {(pathname === '/catalogo' || pathname.startsWith('/catalogo')) && (
         <SearchBar />
       )}
 

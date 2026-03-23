@@ -8,7 +8,7 @@ const Footer = () => {
   const pathname = usePathname();
 
   // Only show footer on Home and Shop pages
-  const visiblePaths = ['/', '/shop'];
+  const visiblePaths = ['/', '/catalogo'];
   if (!visiblePaths.includes(pathname)) return null;
 
   return (

@@ -13,20 +13,15 @@ const NAVIGATION_TIMEOUT_MS = 5000;
 /**
  * NavigationEvents — side-effect-only component.
  * Detects pathname changes (navigation completion) and calls completeNavigation.
+ * Uses getState() instead of the hook to avoid store subscriptions that can
+ * interfere with Next.js App Router's concurrent navigation transitions.
  */
 export function NavigationEvents() {
   const pathname = usePathname();
-  const { completeNavigation } = useTransitionStore();
-  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Skip the initial mount — we only care about subsequent pathname changes
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    completeNavigation();
-  }, [pathname, completeNavigation]);
+    useTransitionStore.getState().completeNavigation();
+  }, [pathname]);
 
   return null;
 }

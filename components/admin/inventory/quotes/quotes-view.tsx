@@ -19,7 +19,7 @@ import {
   QUOTE_STATUS_STYLES,
 } from '@/lib/constants/admin/quotes.constants';
 import { useQuotes } from '@/lib/hooks/use-quotes';
-import { DataTable } from '@/components/admin/common/organisms/data-table';
+import { DataTable, Column } from '@/components/admin/common/organisms/data-table';
 import { Modal } from '@/components/admin/common/organisms/modal';
 
 type SortOrder = 'asc' | 'desc';
@@ -62,20 +62,20 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
 
   // ─── Table columns ─────────────────────────────────────────────────────────
 
-  const columns = [
+  const columns: Column<Quote>[] = [
     {
       header: '#',
       key: 'quoteNumber',
-      render: (value: string) => (
-        <span className="font-mono text-[1.3rem] font-medium tracking-wide text-subtle">{value}</span>
+      render: (value: unknown) => (
+        <span className="font-mono text-[1.3rem] font-medium tracking-wide text-subtle">{value as string}</span>
       ),
     },
     {
       header: 'Cliente',
       key: 'clientName',
-      render: (value: string, row: Quote) => (
+      render: (value: unknown, row: Quote) => (
         <div>
-          <span className="font-bold text-heading">{value}</span>
+          <span className="font-bold text-heading">{value as string}</span>
           {row.clientCompany && (
             <span className="block text-[1.1rem] text-gray-400 mt-[0.2rem]">
               {row.clientCompany}
@@ -87,32 +87,35 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
     {
       header: 'Estado',
       key: 'status',
-      render: (value: QuoteStatus) => (
-        <span
-          className={`inline-block text-[1.2rem] font-bold px-[1rem] py-[0.3rem] rounded-full ${QUOTE_STATUS_STYLES[value]}`}
-        >
-          {QUOTE_STATUS_LABELS[value]}
-        </span>
-      ),
+      render: (value: unknown) => {
+        const status = value as QuoteStatus;
+        return (
+          <span
+            className={`inline-block text-[1.2rem] font-bold px-[1rem] py-[0.3rem] rounded-full ${QUOTE_STATUS_STYLES[status]}`}
+          >
+            {QUOTE_STATUS_LABELS[status]}
+          </span>
+        );
+      },
     },
     {
       header: 'Válido hasta',
       key: 'validUntil',
-      render: (value: Date) => (
-        <span className="text-[1.3rem]">{formatDate(value)}</span>
+      render: (value: unknown) => (
+        <span className="text-[1.3rem]">{formatDate(value as Date)}</span>
       ),
     },
     {
       header: 'Total',
       key: 'totalAmount',
-      render: (value: number) => (
-        <span className="font-bold text-heading">{formatPrice(value)}</span>
+      render: (value: unknown) => (
+        <span className="font-bold text-heading">{formatPrice(value as number)}</span>
       ),
     },
     {
       header: 'Acciones',
       key: 'id',
-      render: (_: string, row: Quote) => (
+      render: (_: unknown, row: Quote) => (
         <div className="flex items-center gap-[0.8rem]">
           <button
             type="button"

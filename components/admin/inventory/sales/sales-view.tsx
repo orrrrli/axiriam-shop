@@ -13,7 +13,7 @@ import {
   SALE_COLUMNS,
 } from '@/lib/constants/admin/sales.constants';
 import { useSalesListMutations } from '@/lib/hooks/use-sales-list-mutations';
-import { DataTable } from '@/components/admin/common/organisms/data-table';
+import { DataTable, Column } from '@/components/admin/common/organisms/data-table';
 
 export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
   const router = useRouter();
@@ -72,18 +72,18 @@ export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
     }
   }
 
-  const columns = [
+  const columns: Column<Sale>[] = [
     {
       header: 'Cliente',
       key: 'name',
-      render: (value: string) => (
-        <span className="text-heading font-bold">{value}</span>
+      render: (value: unknown) => (
+        <span className="text-heading font-bold">{value as string}</span>
       ),
     },
     {
       header: 'Red Social',
       key: 'socialMediaPlatform',
-      render: (_: string, row: Sale) => (
+      render: (_: unknown, row: Sale) => (
         <span className="inline-flex items-center gap-[0.4rem] bg-body-alt px-[0.8rem] py-[0.3rem] text-[1.2rem] text-paragraph font-bold">
           {PLATFORM_ICONS[row.socialMediaPlatform] ?? row.socialMediaPlatform}
           {' '}@{row.socialMediaUsername}
@@ -93,43 +93,48 @@ export default function SalesView({ initialSales }: { initialSales: Sale[] }) {
     {
       header: 'Tipo Envío',
       key: 'shippingType',
-      render: (value: string) => SHIPPING_LABELS[value] ?? value,
+      render: (value: unknown) => SHIPPING_LABELS[value as string] ?? (value as string),
     },
     {
       header: 'Total',
       key: 'totalAmount',
-      render: (value: number) => (
-        <span className="text-heading font-bold">{formatPrice(value)}</span>
+      render: (value: unknown) => (
+        <span className="text-heading font-bold">{formatPrice(value as number)}</span>
       ),
     },
     {
       header: 'Estado',
       key: 'status',
-      render: (value: SaleStatus, row: Sale) => (
-        <select
-          className={`text-[1.2rem] font-bold px-[0.8rem] py-[0.3rem] border-0 cursor-pointer focus:outline-none ${STATUS_STYLES[value]}`}
-          value={value}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => handleStatusChange(row.id, e.target.value as SaleStatus)}
-        >
-          {Object.entries(STATUS_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </select>
-      ),
+      render: (value: unknown, row: Sale) => {
+        const status = value as SaleStatus;
+        return (
+          <select
+            className={`text-[1.2rem] font-bold px-[0.8rem] py-[0.3rem] border-0 cursor-pointer focus:outline-none ${STATUS_STYLES[status]}`}
+            value={status}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => handleStatusChange(row.id, e.target.value as SaleStatus)}
+          >
+            {Object.entries(STATUS_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </select>
+        );
+      },
     },
     {
       header: 'Entrega',
       key: 'deliveryDate',
-      render: (value: string | undefined) =>
-        value ? new Date(value).toLocaleDateString('es-MX') : '—',
+      render: (value: unknown) => {
+        const v = value as string | undefined;
+        return v ? new Date(v).toLocaleDateString('es-MX') : '—';
+      },
     },
     {
       header: 'Acciones',
       key: 'id',
-      render: (_: string, row: Sale) => (
+      render: (_: unknown, row: Sale) => (
         <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"

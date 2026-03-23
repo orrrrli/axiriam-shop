@@ -6,7 +6,7 @@ import { Plus, ShoppingCart, Trash2, Loader2 } from 'lucide-react';
 import { OrderMaterial, OrderMaterialFormData, OrderMaterialStatus } from '@/types/inventory';
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/lib/constants/admin/orders.constants';
 import { useOrderMutations } from '@/lib/hooks/use-order-mutations';
-import { DataTable } from '@/components/admin/common';
+import { DataTable, Column } from '@/components/admin/common';
 
 export default function OrdersView({ initialOrders }: { initialOrders: OrderMaterial[] }) {
   const router = useRouter();
@@ -43,58 +43,61 @@ export default function OrdersView({ initialOrders }: { initialOrders: OrderMate
     }
   }
 
-  const columns = [
+  const columns: Column<OrderMaterial>[] = [
     {
       header: 'Num Pedido',
       key: 'description',
-      render: (value: string) => (
-        <span className="font-mono font-bold text-heading uppercase">{value || '—'}</span>
+      render: (value: unknown) => (
+        <span className="font-mono font-bold text-heading uppercase">{(value as string) || '—'}</span>
       ),
     },
     {
       header: 'Proveedor',
       key: 'distributor',
-      render: (value: string) => <span className="text-paragraph">{value || '—'}</span>,
+      render: (value: unknown) => <span className="text-paragraph">{(value as string) || '—'}</span>,
     },
     {
       header: 'Paquetería',
       key: 'parcel_service',
-      render: (value: string | null) => value ?? '—',
+      render: (value: unknown) => (value as string | null) ?? '—',
     },
     {
       header: 'Tracking',
       key: 'trackingNumber',
-      render: (value: string | null) => (
-        <span className="font-mono">{value ?? '—'}</span>
+      render: (value: unknown) => (
+        <span className="font-mono">{(value as string | null) ?? '—'}</span>
       ),
     },
     {
       header: 'Fecha',
       key: 'createdAt',
-      render: (value: string) => new Date(value).toLocaleDateString('es-MX'),
+      render: (value: unknown) => new Date(value as string).toLocaleDateString('es-MX'),
     },
     {
       header: 'Estado',
       key: 'status',
-      render: (value: OrderMaterialStatus, row: OrderMaterial) => (
-        <select
-          className={`text-[1.2rem] font-bold px-[0.8rem] py-[0.3rem] border-0 cursor-pointer focus:outline-none ${ORDER_STATUS_STYLES[value]}`}
-          value={value}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => handleStatusChange(row.id, e.target.value as OrderMaterialStatus)}
-        >
-          {Object.entries(ORDER_STATUS_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </select>
-      ),
+      render: (value: unknown, row: OrderMaterial) => {
+        const status = value as OrderMaterialStatus;
+        return (
+          <select
+            className={`text-[1.2rem] font-bold px-[0.8rem] py-[0.3rem] border-0 cursor-pointer focus:outline-none ${ORDER_STATUS_STYLES[status]}`}
+            value={status}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => handleStatusChange(row.id, e.target.value as OrderMaterialStatus)}
+          >
+            {Object.entries(ORDER_STATUS_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </select>
+        );
+      },
     },
     {
       header: 'Acciones',
       key: 'id',
-      render: (_: string, row: OrderMaterial) => (
+      render: (_: unknown, row: OrderMaterial) => (
         <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"

@@ -8,7 +8,7 @@ import { useCloudinaryUpload } from '@/lib/hooks/use-cloudinary-upload';
 import { RawMaterial, RawMaterialFormData, MaterialType } from '@/types/inventory';
 import { WAREHOUSE_TYPE_LABELS, EMPTY_WAREHOUSE_FORM } from '@/lib/constants/admin/warehouse.constants';
 import { useWarehouseMutations } from '@/lib/hooks/use-warehouse-mutations';
-import { Modal, DataTable } from '@/components/admin/common';
+import { Modal, DataTable, Column } from '@/components/admin/common';
 
 export default function WarehouseView({ initialMaterials }: { initialMaterials: RawMaterial[] }): React.ReactElement {
   const router = useRouter();
@@ -200,53 +200,55 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
   }
 
   // ── Table columns ────────────────────────────────────────────────────────────
-  const columns = [
+  const columns: Column<RawMaterial>[] = [
     {
       header: 'Foto',
       key: 'imageUrl',
-      render: (value: string | undefined, row: RawMaterial) =>
-        value ? (
-          <Image src={value} alt={row.name} width={50} height={50} className="object-cover rounded" />
+      render: (value: unknown, row: RawMaterial) => {
+        const url = value as string | undefined;
+        return url ? (
+          <Image src={url} alt={row.name} width={50} height={50} className="object-cover rounded" />
         ) : (
           <ImageIcon className="w-[3rem] h-[3rem] text-subtle opacity-30" />
-        ),
+        );
+      },
     },
     {
       header: 'Nombre',
       key: 'name',
-      render: (value: string) => <span className="font-bold text-heading">{value}</span>,
+      render: (value: unknown) => <span className="font-bold text-heading">{value as string}</span>,
     },
     {
       header: 'Tipo',
       key: 'type',
-      render: (value: string) => WAREHOUSE_TYPE_LABELS[value] ?? value,
+      render: (value: unknown) => WAREHOUSE_TYPE_LABELS[value as string] ?? (value as string),
     },
     {
       header: 'Dimensiones',
       key: 'width',
-      render: (_: number, row: RawMaterial) => (
+      render: (_: unknown, row: RawMaterial) => (
         <span className="text-paragraph">{row.width} × {row.height} m</span>
       ),
     },
     {
       header: 'Rendimiento',
       key: 'quantity',
-      render: (value: number) => (
+      render: (value: unknown) => (
         <span className="text-paragraph">
-          {value} <span className="text-subtle text-[1.2rem]">items</span>
+          {value as number} <span className="text-subtle text-[1.2rem]">items</span>
         </span>
       ),
     },
     {
       header: 'Precio',
       key: 'price',
-      render: (value: number) => <span className="font-bold text-heading">${value.toFixed(2)}</span>,
+      render: (value: unknown) => <span className="font-bold text-heading">${(value as number).toFixed(2)}</span>,
     },
     { header: 'Proveedor', key: 'supplier' },
     {
       header: 'Acciones',
       key: 'id',
-      render: (_: string, row: RawMaterial) => (
+      render: (_: unknown, row: RawMaterial) => (
         <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"

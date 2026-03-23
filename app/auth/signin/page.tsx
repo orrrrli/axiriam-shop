@@ -32,11 +32,11 @@ export default function SignInPage(): React.ReactElement {
           body: JSON.stringify(formData),
         });
 
-        const data = await res.json() as { user?: unknown; error?: string };
+        const data = await res.json() as { user?: { id: string; name: string; email: string; role: string }; error?: string };
 
-        if (res.ok) {
+        if (res.ok && data.user) {
           setDemoSession({ user: data.user });
-          const demoUser = data.user as { role?: string; name?: string };
+          const demoUser = data.user;
           const isAdmin = demoUser?.role === 'admin';
           setRedirecting({ name: demoUser?.name?.split(' ')[0] ?? 'Admin', isAdmin });
           const redirectUrl = isAdmin ? '/admin/dashboard' : '/';

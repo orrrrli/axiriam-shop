@@ -38,6 +38,9 @@ export function TransitionLink({
   children: React.ReactNode;
   onClick?: React.MouseEventHandler<HTMLAnchorElement>;
   className?: string;
+  style?: React.CSSProperties;
+  onMouseEnter?: React.MouseEventHandler<HTMLAnchorElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLAnchorElement>;
 }) {
   const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

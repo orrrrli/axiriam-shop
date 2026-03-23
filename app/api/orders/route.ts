@@ -150,12 +150,14 @@ export async function POST(req: NextRequest) {
 
     // Send confirmation email
     try {
-      await sendOrderConfirmationEmail(session.user?.email || '', {
-        orderId: order.id,
-        items: order.orderItems,
-        total: order.totalPrice,
-        shippingAddress: order.shippingAddress,
-      });
+      if (order.shippingAddress) {
+        await sendOrderConfirmationEmail(session.user?.email || '', {
+          orderId: order.id,
+          items: order.orderItems.map((i) => ({ productName: i.name, quantity: i.quantity, price: i.price })),
+          total: order.totalPrice,
+          shippingAddress: order.shippingAddress,
+        });
+      }
     } catch (emailError) {
       console.error('Failed to send confirmation email:', emailError);
       // Don't fail the order if email fails

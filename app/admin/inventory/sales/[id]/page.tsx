@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getSaleById, getItems } from '@/lib/services/inventory.service';
-import SaleDetail from '@/components/admin/inventory/sales/SaleDetail';
+import SaleDetail from '@/components/admin/inventory/sales/sale-detail';
 import type { InventoryItem, Sale } from '@/types/inventory';
 
 export default async function SaleDetailPage({

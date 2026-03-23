@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 import { getQuoteByNumber } from '@/services/quote-service';
-import QuoteFormPage from '@/components/admin/inventory/quotes/QuoteFormPage';
+import QuoteFormPage from '@/components/admin/inventory/quotes/quote-form-page';
 
 export default async function EditQuotePage({
   params,

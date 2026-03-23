@@ -10,15 +10,30 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+interface OrderEmailItem {
+  productName: string;
+  quantity: number;
+  price: number;
+}
+
+interface ShippingAddress {
+  fullName: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+}
+
 export async function sendOrderConfirmationEmail(
   email: string,
   orderDetails: {
     orderId: string;
-    items: any[];
+    items: OrderEmailItem[];
     total: number;
-    shippingAddress: any;
+    shippingAddress: ShippingAddress;
   }
-) {
+): Promise<void> {
   const itemsList = orderDetails.items
     .map(
       (item) =>

@@ -1,4 +1,4 @@
-import CheckoutTransitionIndicator from '@/components/transitions/CheckoutTransitionIndicator';
+import CheckoutTransitionIndicator from '@/components/transitions/checkout-transition-indicator';
 
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
   return (

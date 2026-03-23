@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { FormField } from '@/components/admin/common/molecules/FormField';
+import { FormField } from '@/components/admin/common/molecules/form-field';
 
 describe('FormField Integration Tests', () => {
   it('should integrate with text input', () => {

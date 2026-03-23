@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getOrderById, getDesigns } from '@/lib/services/inventory.service';
-import OrderDetail from '@/components/admin/inventory/orders/OrderDetail';
+import OrderDetail from '@/components/admin/inventory/orders/order-detail';
 import type { RawMaterial } from '@/types/inventory';
 
 export default async function OrderDetailPage({

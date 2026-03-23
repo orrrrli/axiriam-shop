@@ -5,9 +5,9 @@
  */
 
 // Export organism components as they are created
-export * from './Modal';
-export * from './DataTable';
-export * from './FormModal';
-export * from './AdminNavbar';
-export * from './ProductTableFilters';
-export * from './SlideOver';
+export * from './modal';
+export * from './data-table';
+export * from './form-modal';
+export * from './admin-navbar';
+export * from './product-table-filters';
+export * from './slide-over';

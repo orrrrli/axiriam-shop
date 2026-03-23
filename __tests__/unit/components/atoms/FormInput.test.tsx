@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { FormInput } from '@/components/admin/common/atoms/FormInput';
+import { FormInput } from '@/components/admin/common/atoms/form-input';
 
 describe('FormInput Component', () => {
   it('should render with value', () => {

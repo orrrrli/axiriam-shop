@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendOrderConfirmationEmail } from '@/lib/utils/email';
 import { generateOrderNumber, generateTrackingNumber } from '@/lib/utils/helpers';
 import { mockOrders } from '@/lib/data/mockData';
-import { getDemoSession } from '@/lib/demoAuth';
+import { getDemoSession } from '@/lib/demo-auth';
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    let where: any = {};
+    let where: Prisma.OrderWhereInput = {};
 
     if (session.user?.role === 'admin') {
       // Admin can see all orders or filter by userId
@@ -113,7 +114,8 @@ export async function POST(req: NextRequest) {
     // const orderNumber = generateOrderNumber(); // Not used in Schema currently but could be added
 
     // Prepare items for Prisma (mapping from request structure to database structure)
-    const orderItemsData = data.items.map((item: any) => ({
+    type CartItem = { productName?: string; name?: string; quantity: number; price: number; product: string };
+    const orderItemsData = data.items.map((item: CartItem) => ({
       name: item.productName || item.name, // Handle potentially different field names
       quantity: item.quantity,
       price: item.price,

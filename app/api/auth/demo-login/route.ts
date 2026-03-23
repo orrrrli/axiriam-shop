@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { demoSignIn, setDemoSession } from '@/lib/demoAuth';
+import { demoSignIn, setDemoSession } from '@/lib/demo-auth';
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 

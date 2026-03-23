@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Button } from '@/components/admin/common/atoms/Button';
+import { Button } from '@/components/admin/common/atoms/button';
 
 describe('Button Component', () => {
   it('should render with children', () => {

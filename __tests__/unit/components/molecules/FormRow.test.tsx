@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { FormRow } from '@/components/admin/common/molecules/FormRow';
+import { FormRow } from '@/components/admin/common/molecules/form-row';
 
 describe('FormRow Component', () => {
   it('should render children', () => {

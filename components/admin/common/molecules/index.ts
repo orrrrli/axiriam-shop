@@ -5,6 +5,6 @@
  */
 
 // Export molecule components as they are created
-export * from './FormField';
-export * from './FormRow';
-export * from './ActionButtons';
+export * from './form-field';
+export * from './form-row';
+export * from './action-buttons';

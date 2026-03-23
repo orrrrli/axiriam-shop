@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCartStore } from '@/lib/store/cartStore';
 import { formatPrice } from '@/lib/utils/helpers';
-import Navbar from '@/components/organisms/Navbar';
-import StepTracker from '@/components/StepTracker';
-import ImageLoader from '@/components/ImageLoader';
+import Navbar from '@/components/organisms/navbar';
+import StepTracker from '@/components/molecules/step-tracker';
+import ImageLoader from '@/components/atoms/image-loader';
 import Link from 'next/link';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 

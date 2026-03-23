@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { FormModal } from '@/components/admin/common/organisms/FormModal';
-import { FormField } from '@/components/admin/common/molecules/FormField';
-import { FormRow } from '@/components/admin/common/molecules/FormRow';
-import { FormInput } from '@/components/admin/common/atoms/FormInput';
-import { FormNumberInput } from '@/components/admin/common/atoms/FormNumberInput';
-import { FormSelect } from '@/components/admin/common/atoms/FormSelect';
-import { FormTextarea } from '@/components/admin/common/atoms/FormTextarea';
+import { FormModal } from '@/components/admin/common/organisms/form-modal';
+import { FormField } from '@/components/admin/common/molecules/form-field';
+import { FormRow } from '@/components/admin/common/molecules/form-row';
+import { FormInput } from '@/components/admin/common/atoms/form-input';
+import { FormNumberInput } from '@/components/admin/common/atoms/form-number-input';
+import { FormSelect } from '@/components/admin/common/atoms/form-select';
+import { FormTextarea } from '@/components/admin/common/atoms/form-textarea';
 
 describe('FormModal Integration Tests', () => {
   describe('Integration with FormField', () => {

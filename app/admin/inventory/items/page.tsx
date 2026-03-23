@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getItems, getItemsSalesStats, getDesigns } from '@/lib/services/inventory.service';
-import ItemsView from '@/components/admin/inventory/items/ItemsView';
+import ItemsView from '@/components/admin/inventory/items/items-view';
 import type { InventoryItem, InventoryItemSalesStats } from '@/types/inventory';
 
 export default async function ItemsPage(): Promise<React.ReactElement> {

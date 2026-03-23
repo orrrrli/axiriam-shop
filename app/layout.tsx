@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import { Tajawal, Poppins, Inter, Montserrat, Geist, Source_Sans_3, Karla } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/components/providers/AuthProvider';
-import ToastProvider from '@/components/providers/ToastProvider';
-import { BasketProvider } from '@/components/providers/BasketProvider';
-import BasketDrawer from '@/components/BasketDrawer';
-import TransitionProvider from '@/components/transitions/TransitionProvider';
+import { AuthProvider } from '@/components/providers/auth-provider';
+import ToastProvider from '@/components/providers/toast-provider';
+import { BasketProvider } from '@/components/providers/basket-provider';
+import BasketDrawer from '@/components/organisms/basket-drawer';
+import TransitionProvider from '@/components/transitions/transition-provider';
 
 const tajawal = Tajawal({
   subsets: ['latin'],

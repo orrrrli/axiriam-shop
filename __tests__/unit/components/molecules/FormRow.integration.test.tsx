@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { FormRow } from '@/components/admin/common/molecules/FormRow';
-import { FormField } from '@/components/admin/common/molecules/FormField';
-import { FormInput } from '@/components/admin/common/atoms/FormInput';
-import { FormNumberInput } from '@/components/admin/common/atoms/FormNumberInput';
+import { FormRow } from '@/components/admin/common/molecules/form-row';
+import { FormField } from '@/components/admin/common/molecules/form-field';
+import { FormInput } from '@/components/admin/common/atoms/form-input';
+import { FormNumberInput } from '@/components/admin/common/atoms/form-number-input';
 
 describe('FormRow Integration Tests', () => {
   it('should integrate with FormField and FormInput components', () => {

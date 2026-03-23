@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import { ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
-import { setDemoSession } from '@/lib/demoAuth';
+import { setDemoSession } from '@/lib/demo-auth';
 import { getSession } from 'next-auth/react';
-import { TransitionLink } from '@/components/transitions/NavigationEvents';
+import { TransitionLink } from '@/components/transitions/navigation-events';
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 

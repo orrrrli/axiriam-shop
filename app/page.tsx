@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/organisms/Navbar';
-import Footer from '@/components/Footer';
-import HeroSection from '@/components/organisms/HeroSection';
-import ProductShowcaseGrid from '@/components/ProductShowcaseGrid';
+import Navbar from '@/components/organisms/navbar';
+import Footer from '@/components/organisms/footer';
+import HeroSection from '@/components/organisms/hero-section';
+import ProductShowcaseGrid from '@/components/organisms/product-showcase-grid';
 import type { Product } from '@/types/product';
 
 export default function Home() {

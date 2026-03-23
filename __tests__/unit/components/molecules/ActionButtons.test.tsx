@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ActionButtons } from '@/components/admin/common/molecules/ActionButtons';
+import { ActionButtons } from '@/components/admin/common/molecules/action-buttons';
 
 describe('ActionButtons Component', () => {
   it('should render edit and delete buttons', () => {

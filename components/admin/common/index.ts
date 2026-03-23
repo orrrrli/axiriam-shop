@@ -5,18 +5,18 @@
  */
 
 // Atoms
-export * from './atoms/FormInput';
-export * from './atoms/FormTextarea';
-export * from './atoms/FormSelect';
-export * from './atoms/FormNumberInput';
-export * from './atoms/Button';
+export * from './atoms/form-input';
+export * from './atoms/form-textarea';
+export * from './atoms/form-select';
+export * from './atoms/form-number-input';
+export * from './atoms/button';
 
 // Molecules
-export * from './molecules/FormField';
-export * from './molecules/FormRow';
-export * from './molecules/ActionButtons';
+export * from './molecules/form-field';
+export * from './molecules/form-row';
+export * from './molecules/action-buttons';
 
 // Organisms
-export * from './organisms/Modal';
-export * from './organisms/DataTable';
-export * from './organisms/FormModal';
+export * from './organisms/modal';
+export * from './organisms/data-table';
+export * from './organisms/form-modal';

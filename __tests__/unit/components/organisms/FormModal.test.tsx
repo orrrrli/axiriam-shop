@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { FormModal } from '@/components/admin/common/organisms/FormModal';
+import { FormModal } from '@/components/admin/common/organisms/form-modal';
 
 describe('FormModal Component', () => {
   describe('Basic Rendering', () => {

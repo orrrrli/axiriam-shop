@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getItemBySlug } from '@/lib/services/inventory.service';
-import ItemDetail from '@/components/admin/inventory/items/ItemDetail';
+import ItemDetail from '@/components/admin/inventory/items/item-detail';
 import type { InventoryItem } from '@/types/inventory';
 
 export default async function ItemDetailPage({

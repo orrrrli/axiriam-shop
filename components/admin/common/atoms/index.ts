@@ -5,8 +5,8 @@
  */
 
 // Export atom components as they are created
-export * from './FormInput';
-export * from './FormTextarea';
-export * from './FormSelect';
-export * from './FormNumberInput';
-export * from './Button';
+export * from './form-input';
+export * from './form-textarea';
+export * from './form-select';
+export * from './form-number-input';
+export * from './button';

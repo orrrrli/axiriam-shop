@@ -1,8 +1,8 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import Navbar from '@/components/organisms/Navbar';
-import Footer from '@/components/Footer';
-import ProductDetail from '@/components/catalog/ProductDetail';
+import Navbar from '@/components/organisms/navbar';
+import Footer from '@/components/organisms/footer';
+import ProductDetail from '@/components/organisms/product-detail';
 import { getProductById } from '@/lib/services/admin/catalog.service';
 
 interface Props {

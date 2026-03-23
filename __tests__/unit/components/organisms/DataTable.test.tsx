@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { DataTable } from '@/components/admin/common/organisms/DataTable';
+import { DataTable } from '@/components/admin/common/organisms/data-table';
 import { Package } from 'lucide-react';
 
 describe('DataTable Component', () => {

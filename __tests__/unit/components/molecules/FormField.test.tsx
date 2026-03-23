@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { FormField } from '@/components/admin/common/molecules/FormField';
+import { FormField } from '@/components/admin/common/molecules/form-field';
 
 describe('FormField Component', () => {
   it('should render label and children', () => {

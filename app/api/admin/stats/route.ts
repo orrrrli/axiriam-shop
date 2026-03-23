@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { mockStats } from '@/lib/data/mockData';
-import { getDemoSession } from '@/lib/demoAuth';
+import { getDemoSession } from '@/lib/demo-auth';
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 

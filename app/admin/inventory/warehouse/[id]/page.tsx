@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getDesignById } from '@/lib/services/inventory.service';
-import WarehouseDetail from '@/components/admin/inventory/warehouse/WarehouseDetail';
+import WarehouseDetail from '@/components/admin/inventory/warehouse/warehouse-detail';
 
 export default async function WarehouseDetailPage({
   params,

@@ -1,6 +1,6 @@
-import Navbar from '@/components/organisms/Navbar';
-import Footer from '@/components/Footer';
-import CatalogView from '@/components/catalog/CatalogView';
+import Navbar from '@/components/organisms/navbar';
+import Footer from '@/components/organisms/footer';
+import CatalogView from '@/components/organisms/catalog-view';
 import { getProducts } from '@/lib/services/admin/catalog.service';
 
 export default async function CatalogoPage(): Promise<React.ReactElement> {

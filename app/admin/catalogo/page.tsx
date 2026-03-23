@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getProducts } from '@/lib/services/admin/catalog.service';
-import CatalogView from '@/components/admin/catalog/CatalogView';
+import CatalogView from '@/components/admin/catalog/catalog-view';
 
 export default async function CatalogoPage(): Promise<React.ReactElement> {
   const session = await getServerSession(authOptions);

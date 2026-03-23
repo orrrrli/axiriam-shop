@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { FormTextarea } from '@/components/admin/common/atoms/FormTextarea';
+import { FormTextarea } from '@/components/admin/common/atoms/form-textarea';
 
 describe('FormTextarea Component', () => {
   it('should render with value', () => {

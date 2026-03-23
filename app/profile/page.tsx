@@ -1,18 +1,37 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import type { Session } from 'next-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Navbar from '@/components/organisms/Navbar';
+import Navbar from '@/components/organisms/navbar';
 import { Package, Clock, Loader2, User } from 'lucide-react';
 import { formatPrice } from '@/lib/utils/helpers';
 
 type TabIndex = 0 | 1;
 
+interface OrderItem {
+  productName?: string;
+  name?: string;
+  quantity: number;
+  price: number;
+}
+
+interface ProfileOrder {
+  _id?: string;
+  id?: string;
+  status: string;
+  totalPrice: number;
+  createdAt: string;
+  trackingNumber?: string;
+  items?: OrderItem[];
+  orderItems?: OrderItem[];
+}
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<ProfileOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabIndex>(0);
 
@@ -102,7 +121,7 @@ export default function ProfilePage() {
 /* =============================================
    ACCOUNT TAB
    ============================================= */
-function AccountTab({ session }: { session: any }) {
+function AccountTab({ session }: { session: Session | null }) {
   return (
     <div className="flex mx-auto w-full max-xs:w-full">
       <div className="w-full h-auto">
@@ -168,7 +187,7 @@ function AccountTab({ session }: { session: any }) {
 /* =============================================
    ORDERS TAB
    ============================================= */
-function OrdersTab({ orders }: { orders: any[] }) {
+function OrdersTab({ orders }: { orders: ProfileOrder[] }) {
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-[10rem]">
@@ -183,7 +202,7 @@ function OrdersTab({ orders }: { orders: any[] }) {
 
   return (
     <div className="space-y-[1.6rem] py-[1.6rem]">
-      {orders.map((order: any) => (
+      {orders.map((order) => (
         <div
           key={order._id || order.id}
           className="border border-border p-[2rem] transition-all duration-300"
@@ -221,7 +240,7 @@ function OrdersTab({ orders }: { orders: any[] }) {
 
           {/* Order items */}
           <div className="space-y-[0.8rem] mb-[1.6rem]">
-            {order.items?.map((item: any, idx: number) => (
+            {order.items?.map((item, idx) => (
               <div key={idx} className="flex justify-between text-[1.3rem]">
                 <span className="text-paragraph">
                   {item.productName || item.name} x {item.quantity}
@@ -232,7 +251,7 @@ function OrdersTab({ orders }: { orders: any[] }) {
               </div>
             ))}
             {/* Prisma orderItems fallback */}
-            {order.orderItems?.map((item: any, idx: number) => (
+            {order.orderItems?.map((item, idx) => (
               <div key={idx} className="flex justify-between text-[1.3rem]">
                 <span className="text-paragraph">
                   {item.name} x {item.quantity}

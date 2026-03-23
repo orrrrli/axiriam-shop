@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-import prisma from '@/lib/prisma';
 import {
   InventoryItem,
   InventoryItemFormData,
@@ -8,20 +6,9 @@ import {
   RawMaterial,
   RawMaterialFormData,
   OrderMaterial,
-  OrderMaterialGroup,
-  OrderMaterialDesign,
   OrderMaterialFormData,
-  OrderMaterialStatus,
-  ParcelService,
   Sale,
-  SaleItem,
-  SaleExtra,
   SaleFormData,
-  SaleStatus,
-  SocialMediaPlatform,
-  ShippingType,
-  LocalShippingOption,
-  NationalShippingCarrier,
   Quote,
   QuoteFormData,
   IvaRate,
@@ -31,7 +18,7 @@ import {
   StoreOrder,
   StoreOrderUpdateData,
 } from '@/types/inventory';
-import { toDbMaterialType, toDbLocalShipping, fromDbLocalShipping, fromDbMaterialType, slugifyItemName } from '@/lib/utils/inventory';
+import { slugifyItemName } from '@/lib/utils/inventory';
 import {
   findAllItems,
   findItemById,
@@ -58,6 +45,20 @@ import {
   updateQuote as updateQuoteInRepo,
   deleteQuote as deleteQuoteFromRepo,
 } from '@/repositories/quote-repository';
+import {
+  findAllOrders,
+  findOrderById,
+  createOrderRecord,
+  updateOrderRecord,
+  deleteOrderRecord,
+} from '@/repositories/order-material.repository';
+import {
+  findAllSales,
+  findSaleById,
+  createSaleRecord,
+  updateSaleRecord,
+  deleteSaleRecord,
+} from '@/repositories/sale.repository';
 
 // ─── ITEMS ────────────────────────────────────────────────────────────────────
 
@@ -160,277 +161,46 @@ export async function deleteDesign(id: string): Promise<void> {
 
 // ─── PEDIDOS ──────────────────────────────────────────────────────────────────
 
-const orderInclude = {
-  groups: { include: { designs: true } },
-} as const;
-
-type DbOrder = Prisma.OrderMaterialGetPayload<{
-  include: { groups: { include: { designs: true } } };
-}>;
-
-function mapToOrder(raw: DbOrder): OrderMaterial {
-  return {
-    id: raw.id,
-    distributor: raw.distributor,
-    description: raw.description,
-    status: raw.status as OrderMaterialStatus,
-    trackingNumber: raw.trackingNumber ?? undefined,
-    parcel_service: raw.parcelService as ParcelService | undefined,
-    createdAt: raw.createdAt,
-    updatedAt: raw.updatedAt,
-    materials: raw.groups.map((group): OrderMaterialGroup => ({
-      designs: group.designs.map((d): OrderMaterialDesign => ({
-        rawMaterialId: d.rawMaterialId ?? '',
-        quantity: d.quantity,
-        addToInventory: d.addToInventory,
-        customDesignName: d.customDesignName ?? undefined,
-        type: d.type ? (fromDbMaterialType(d.type) as OrderMaterialDesign['type']) : undefined,
-      })),
-    })),
-  };
-}
-
 export async function getOrders(): Promise<OrderMaterial[]> {
-  const orders = await prisma.orderMaterial.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: orderInclude,
-  });
-  return orders.map(mapToOrder);
+  return findAllOrders();
 }
 
 export async function getOrderById(id: string): Promise<OrderMaterial | null> {
-  const order = await prisma.orderMaterial.findUnique({
-    where: { id },
-    include: orderInclude,
-  });
-  return order ? mapToOrder(order) : null;
+  return findOrderById(id);
 }
 
 export async function createOrder(data: OrderMaterialFormData): Promise<OrderMaterial> {
-  const order = await prisma.orderMaterial.create({
-    data: {
-      distributor: data.distributor,
-      description: data.description,
-      status: data.status,
-      trackingNumber: data.trackingNumber,
-      parcelService: data.parcel_service,
-      groups: {
-        create: data.materials.map((group) => ({
-          designs: {
-            create: group.designs.map((d) => ({
-              rawMaterialId: d.rawMaterialId || null,
-              quantity: d.quantity,
-              addToInventory: d.addToInventory ?? false,
-              customDesignName: d.customDesignName,
-              type: d.type ? (toDbMaterialType(d.type) as Prisma.OrderMaterialDesignCreateInput['type']) : null,
-            })),
-          },
-        })),
-      },
-    },
-    include: orderInclude,
-  });
-  return mapToOrder(order);
+  return createOrderRecord(data);
 }
 
 export async function updateOrder(id: string, data: OrderMaterialFormData): Promise<OrderMaterial> {
-  const existingGroups = await prisma.orderMaterialGroup.findMany({
-    where: { orderMaterialId: id },
-    select: { id: true },
-  });
-  await prisma.orderMaterialDesign.deleteMany({
-    where: { groupId: { in: existingGroups.map((g) => g.id) } },
-  });
-  await prisma.orderMaterialGroup.deleteMany({ where: { orderMaterialId: id } });
-
-  const order = await prisma.orderMaterial.update({
-    where: { id },
-    data: {
-      distributor: data.distributor,
-      description: data.description,
-      status: data.status,
-      trackingNumber: data.trackingNumber,
-      parcelService: data.parcel_service,
-      groups: {
-        create: data.materials.map((group) => ({
-          designs: {
-            create: group.designs.map((d) => ({
-              rawMaterialId: d.rawMaterialId || null,
-              quantity: d.quantity,
-              addToInventory: d.addToInventory ?? false,
-              customDesignName: d.customDesignName,
-              type: d.type ? (toDbMaterialType(d.type) as Prisma.OrderMaterialDesignCreateInput['type']) : null,
-            })),
-          },
-        })),
-      },
-    },
-    include: orderInclude,
-  });
-  return mapToOrder(order);
+  return updateOrderRecord(id, data);
 }
 
 export async function deleteOrder(id: string): Promise<void> {
-  const groups = await prisma.orderMaterialGroup.findMany({
-    where: { orderMaterialId: id },
-    select: { id: true },
-  });
-  await prisma.orderMaterialDesign.deleteMany({
-    where: { groupId: { in: groups.map((g) => g.id) } },
-  });
-  await prisma.orderMaterialGroup.deleteMany({ where: { orderMaterialId: id } });
-  await prisma.orderMaterial.delete({ where: { id } });
+  return deleteOrderRecord(id);
 }
 
 // ─── ENVIOS ───────────────────────────────────────────────────────────────────
 
-const saleInclude = { saleItems: true, extras: true } as const;
-
-type DbSale = Prisma.SaleGetPayload<{
-  include: { saleItems: true; extras: true };
-}>;
-
-function mapToSale(raw: DbSale): Sale {
-  return {
-    id: raw.id,
-    name: raw.name,
-    status: raw.status as SaleStatus,
-    socialMediaPlatform: raw.socialMediaPlatform as SocialMediaPlatform,
-    socialMediaUsername: raw.socialMediaUsername,
-    saleRef: raw.saleRef,
-    trackingNumber: raw.trackingNumber ?? undefined,
-    invoiceRequired: raw.invoiceRequired,
-    shippingType: raw.shippingType as ShippingType,
-    localShippingOption: raw.localShippingOption
-      ? (fromDbLocalShipping(raw.localShippingOption) as LocalShippingOption)
-      : undefined,
-    localAddress: raw.localAddress ?? undefined,
-    nationalShippingCarrier: raw.nationalShippingCarrier as NationalShippingCarrier | undefined,
-    shippingDescription: raw.shippingDescription ?? undefined,
-    discount: Number(raw.discount),
-    totalAmount: Number(raw.totalAmount),
-    deliveryDate: raw.deliveryDate ?? undefined,
-    saleItems: raw.saleItems.map((si): SaleItem => ({
-      itemId: si.itemId ?? '',
-      quantity: si.quantity,
-      addToInventory: si.addToInventory,
-      customDesignName: si.customDesignName ?? undefined,
-    })),
-    extras: raw.extras.map((e): SaleExtra => ({
-      id: e.id,
-      description: e.description,
-      price: Number(e.price),
-      quantity: e.quantity ?? undefined,
-      discount: e.discount ?? undefined,
-    })),
-    createdAt: raw.createdAt,
-    updatedAt: raw.updatedAt,
-  };
-}
-
 export async function getSales(): Promise<Sale[]> {
-  const sales = await prisma.sale.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: saleInclude,
-  });
-  return sales.map(mapToSale);
+  return findAllSales();
 }
 
 export async function getSaleById(id: string): Promise<Sale | null> {
-  const sale = await prisma.sale.findUnique({ where: { id }, include: saleInclude });
-  return sale ? mapToSale(sale) : null;
+  return findSaleById(id);
 }
 
 export async function createSale(data: SaleFormData): Promise<Sale> {
-  const sale = await prisma.sale.create({
-    data: {
-      name: data.name,
-      status: data.status,
-      socialMediaPlatform: data.socialMediaPlatform,
-      socialMediaUsername: data.socialMediaUsername,
-      trackingNumber: data.trackingNumber,
-      invoiceRequired: data.invoiceRequired,
-      shippingType: data.shippingType,
-      localShippingOption: data.localShippingOption
-        ? (toDbLocalShipping(data.localShippingOption) as Prisma.SaleCreateInput['localShippingOption'])
-        : null,
-      localAddress: data.localAddress,
-      nationalShippingCarrier: data.nationalShippingCarrier,
-      shippingDescription: data.shippingDescription,
-      discount: data.discount,
-      totalAmount: data.totalAmount,
-      deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : null,
-      saleItems: {
-        create: data.saleItems.map((si) => ({
-          itemId: si.itemId || null,
-          quantity: si.quantity,
-          addToInventory: si.addToInventory,
-          customDesignName: si.customDesignName,
-        })),
-      },
-      extras: {
-        create: data.extras.map((e) => ({
-          description: e.description,
-          price: e.price,
-          quantity: e.quantity ?? null,
-          discount: e.discount ?? null,
-        })),
-      },
-    },
-    include: saleInclude,
-  });
-  return mapToSale(sale);
+  return createSaleRecord(data);
 }
 
 export async function updateSale(id: string, data: SaleFormData): Promise<Sale> {
-  await prisma.saleItem.deleteMany({ where: { saleId: id } });
-  await prisma.saleExtra.deleteMany({ where: { saleId: id } });
-
-  const sale = await prisma.sale.update({
-    where: { id },
-    data: {
-      name: data.name,
-      status: data.status,
-      socialMediaPlatform: data.socialMediaPlatform,
-      socialMediaUsername: data.socialMediaUsername,
-      trackingNumber: data.trackingNumber,
-      invoiceRequired: data.invoiceRequired,
-      shippingType: data.shippingType,
-      localShippingOption: data.localShippingOption
-        ? (toDbLocalShipping(data.localShippingOption) as Prisma.SaleUpdateInput['localShippingOption'])
-        : null,
-      localAddress: data.localAddress,
-      nationalShippingCarrier: data.nationalShippingCarrier,
-      shippingDescription: data.shippingDescription,
-      discount: data.discount,
-      totalAmount: data.totalAmount,
-      deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : null,
-      saleItems: {
-        create: data.saleItems.map((si) => ({
-          itemId: si.itemId || null,
-          quantity: si.quantity,
-          addToInventory: si.addToInventory,
-          customDesignName: si.customDesignName,
-        })),
-      },
-      extras: {
-        create: data.extras.map((e) => ({
-          description: e.description,
-          price: e.price,
-          quantity: e.quantity ?? null,
-          discount: e.discount ?? null,
-        })),
-      },
-    },
-    include: saleInclude,
-  });
-  return mapToSale(sale);
+  return updateSaleRecord(id, data);
 }
 
 export async function deleteSale(id: string): Promise<void> {
-  await prisma.saleItem.deleteMany({ where: { saleId: id } });
-  await prisma.saleExtra.deleteMany({ where: { saleId: id } });
-  await prisma.sale.delete({ where: { id } });
+  return deleteSaleRecord(id);
 }
 
 // ─── COTIZACIONES ─────────────────────────────────────────────────────────────

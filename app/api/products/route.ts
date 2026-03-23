@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
     // NORMAL MODE: Use database
 
     // Build filter query
-    const where: any = {};
+    const where: Prisma.ProductWhereInput = {};
 
     if (category && category !== 'all') {
       where.category = category;
@@ -105,7 +106,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Build sort
-    let orderBy: any = { createdAt: 'desc' };
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' };
     if (sortBy) {
       switch (sortBy) {
         case 'name-asc':
@@ -135,7 +136,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ products, total }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
       { error: 'Failed to fetch products' },
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ product }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating product:', error);
     return NextResponse.json(
       { error: 'Failed to create product' },

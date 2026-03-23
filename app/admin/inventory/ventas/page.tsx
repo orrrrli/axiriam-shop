@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { getStoreOrders } from '@/lib/services/inventory.service';
-import VentasView from '@/components/admin/inventory/ventas/VentasView';
+import VentasView from '@/components/admin/inventory/ventas/ventas-view';
 
 export default async function VentasPage(): Promise<React.ReactElement> {
   const session = await getServerSession(authOptions);

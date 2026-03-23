@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
-import { TransitionLink } from '@/components/transitions/NavigationEvents';
+import { TransitionLink } from '@/components/transitions/navigation-events';
 
 type AuthStatus = { type: 'success' | 'error'; message: string };
 

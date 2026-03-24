@@ -1,42 +1,68 @@
-# Pull Request
+## 📋 Descripción
+Resumen claro de los cambios realizados y el problema que resuelven.
 
-## Description
-Please include a summary of the changes and which issue is fixed (if applicable).
+Closes # (issue o story de Shortcut)
 
-Fixes # (issue)
+---
 
-## Type of change
-Please delete options that are not relevant.
+## 🔀 Tipo de cambio
+- [ ] Bug fix — corrección que no rompe funcionalidad existente
+- [ ] Nueva funcionalidad — cambio que no rompe nada y añade features
+- [ ] Breaking change — cambio que afecta funcionalidad existente
+- [ ] Refactor / mejora de código — sin cambio de comportamiento
+- [ ] Dependencias — actualización o adición de paquetes
+- [ ] Documentación
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Code refactoring
-- [ ] Performance improvement
+---
 
-## How Has This Been Tested?
-Please describe the tests that you ran to verify your changes.
+## 🧩 Área del proyecto afectada
+- [ ] UI / Componentes (Next.js)
+- [ ] Autenticación
+- [ ] Catálogo / Productos
+- [ ] Carrito / Checkout
+- [ ] Pagos (Stripe)
+- [ ] Envíos (Envia.com)
+- [ ] Imágenes (Cloudinary)
+- [ ] Base de datos / Prisma (PostgreSQL)
+- [ ] API Routes
+- [ ] Configuración / Infraestructura
 
-- [ ] Test A
-- [ ] Test B
+---
 
-**Test Configuration**:
-* Node version:
-* OS:
+## 🧪 ¿Cómo fue probado?
+Describe el flujo que probaste manualmente o las pruebas automatizadas que agregaste.
 
-## Checklist:
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
+**Configuración de prueba:**
+- Node version:
+- Navegador:
+- Variables de entorno relevantes (sin valores sensibles):
 
-## Screenshots (if applicable):
-Add screenshots to help explain your changes.
+- [ ] Prueba manual en local
+- [ ] Prueba en entorno beta (axiriam.com)
+- [ ] Tests unitarios / de integración
 
-## Additional Notes:
-Add any other context about the pull request here.
+---
+
+## 📸 Capturas de pantalla (si aplica)
+Agrega capturas si hay cambios visuales en la UI.
+
+---
+
+## ✅ Checklist
+- [ ] Mi código sigue las convenciones del proyecto (CLAUDE.md)
+- [ ] Hice auto-revisión de mi propio código
+- [ ] No hay `console.log` de debug en el código
+- [ ] Las variables de entorno nuevas están documentadas en `.env.example`
+- [ ] Los cambios en base de datos incluyen su migración de Prisma
+- [ ] No se exponen credenciales ni secrets en el código
+- [ ] La funcionalidad fue probada en el entorno beta
+```
+
+---
+
+## ¿Cómo agregarlo a GitHub?
+
+En tu repositorio crea este archivo:
+```
+.github/
+└── PULL_REQUEST_TEMPLATE.md

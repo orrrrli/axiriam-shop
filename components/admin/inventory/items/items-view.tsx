@@ -42,7 +42,7 @@ import { DataTable } from '@/components/admin/common/organisms/data-table';
 import { ProductTableFilters } from '@/components/admin/common/organisms/product-table-filters';
 import { SlideOver } from '@/components/admin/common/organisms/slide-over';
 import { Button } from '@/components/admin/common/atoms/button';
-import ConfirmToast from '@/components/atoms/confirm-toast';
+import ConfirmToast from '@/components/molecules/confirm-toast';
 
 const INPUT =
   'w-full bg-white border border-border text-heading text-[1.4rem] px-[1.2rem] py-[1rem] rounded-[0.4rem] placeholder-gray-400 focus:outline-none focus:border-admin-active-border transition-colors duration-150';

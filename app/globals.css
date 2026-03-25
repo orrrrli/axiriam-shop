@@ -217,6 +217,7 @@
   font-weight: 600 !important;
   line-height: 1.4 !important;
   font-family: var(--font-fustat), sans-serif !important;
+  text-transform: none !important;
 }
 
 [data-sileo-description] {

@@ -206,7 +206,37 @@
   font-family: var(--font-montserrat), sans-serif;
 }
 
+/* ── Sileo toast overrides ───────────────────────────────────────────────── */
+:root {
+  --sileo-width: 920px;
+  --sileo-height: 130px;
+}
 
+[data-sileo-title] {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  font-family: var(--font-fustat), sans-serif !important;
+}
+
+[data-sileo-description] {
+  font-size: 1.4rem !important;
+  font-weight: 300 !important;
+  line-height: 1.6 !important;
+  padding: 2rem 2.5rem 2.5rem !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-family: var(--font-inter), sans-serif !important;
+}
+
+[data-sileo-badge] {
+  height: 28px !important;
+  width: 28px !important;
+}
+
+[data-sileo-badge] svg {
+  width: 14px !important;
+  height: 14px !important;
+}
 /* ============================================
    ADMIN TYPOGRAPHY
    Poppins → structure (headings, labels, nav, buttons, th)
@@ -310,3 +340,4 @@
     transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
   }
 }
+

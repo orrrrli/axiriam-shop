@@ -3,7 +3,7 @@ Resumen claro de los cambios realizados y el problema que resuelven.
 
 ---
 
-## 🔀 Tipo de cambio
+## Tipo de cambio
 - [ ] Bug fix — corrección que no rompe funcionalidad existente
 - [ ] Nueva funcionalidad — cambio que no rompe nada y añade features
 - [ ] Breaking change — cambio que afecta funcionalidad existente
@@ -27,21 +27,13 @@ Resumen claro de los cambios realizados y el problema que resuelven.
 
 ---
 
-## 🧪 ¿Cómo fue probado?
+## ¿Cómo fue probado?
 Describe el flujo que probaste manualmente o las pruebas automatizadas que agregaste.
 
-**Configuración de prueba:**
-- Node version:
-- Navegador:
-- Variables de entorno relevantes (sin valores sensibles):
-
-- [ ] Prueba manual en local
-- [ ] Prueba en entorno beta (axiriam.com)
-- [ ] Tests unitarios / de integración
 
 ---
 
-## Capturas de pantalla (si aplica)
+## Capturas de pantalla.
 Agrega capturas si hay cambios visuales en la UI.
 
 ---

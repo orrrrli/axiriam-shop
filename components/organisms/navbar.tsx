@@ -140,13 +140,13 @@ const Navbar = (): React.ReactElement | null => {
             transition: `padding 0.4s ${EASE}`,
           }}
         >
-          <TransitionLink href="/" className="no-underline" style={{ flex: 1 }}>
-            <span style={{ color: '#101010', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+          <TransitionLink href="/" className="no-underline" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <span style={{ color: '#101010', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.08em', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               AXIRIAM
             </span>
           </TransitionLink>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
             <button
               style={{ background: 'transparent', border: 'none', color: '#101010', padding: '8px', cursor: 'pointer', position: 'relative', borderRadius: '9999px' }}
               disabled={basketDisabledPaths.includes(pathname)}
@@ -166,7 +166,7 @@ const Navbar = (): React.ReactElement | null => {
               pathname !== '/auth/signin' && (
                 <TransitionLink
                   href="/auth/signin"
-                  style={{ color: 'white', background: '#101010', borderRadius: '9999px', padding: '6px 16px', fontSize: '1.2rem', fontWeight: 600, textDecoration: 'none' }}
+                  style={{ color: 'white', background: '#101010', borderRadius: '9999px', padding: '6px 12px', fontSize: '1.2rem', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}
                 >
                   Entrar
                 </TransitionLink>
@@ -176,7 +176,7 @@ const Navbar = (): React.ReactElement | null => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen((v) => !v)}
-              style={{ background: 'transparent', border: 'none', color: '#101010', padding: '8px', cursor: 'pointer', borderRadius: '9999px', display: 'flex', alignItems: 'center' }}
+              style={{ background: 'transparent', border: 'none', color: '#101010', padding: '8px', cursor: 'pointer', borderRadius: '9999px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>

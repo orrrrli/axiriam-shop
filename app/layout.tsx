@@ -7,6 +7,7 @@ import ToastProvider from '@/components/providers/toast-provider';
 import { BasketProvider } from '@/components/providers/basket-provider';
 import BasketDrawer from '@/components/organisms/basket-drawer';
 import TransitionProvider from '@/components/transitions/transition-provider';
+import Navbar from '@/components/organisms/navbar';
 
 const tajawal = Tajawal({
   subsets: ['latin'],
@@ -86,6 +87,7 @@ export default function RootLayout({
           <BasketProvider>
             <ToastProvider />
             <TransitionProvider>
+              <Navbar></Navbar>
               {children}
             </TransitionProvider>
             <BasketDrawer />

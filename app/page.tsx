@@ -38,8 +38,6 @@ const featuredHoverCards = [
 export default function Home() {
   return (
     <main className="content !p-0 !block !min-h-0">
-      <Navbar />
-
       {/* 1 — Hero */}
       <HeroSection />
       {/* 3 — Featured Products */}

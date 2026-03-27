@@ -22,7 +22,7 @@ export default function HeroSection(): React.ReactElement {
       style={{
         position: 'relative',
         width: '100%',
-        minHeight: isMobile ? '90vw' : '100vh',
+        minHeight: isMobile ? '100svh' : '100vh',
         overflow: 'hidden',
         background: '#e8e4df',
       }}
@@ -64,7 +64,7 @@ export default function HeroSection(): React.ReactElement {
           flexDirection: 'column',
           justifyContent: isMobile ? 'flex-end' : 'center',
           // ↑ More breathing room: bigger padding, especially bottom on mobile
-          padding: isMobile ? '0 2.8rem 7rem' : '10rem 8rem',
+          padding: isMobile ? '9rem 2.8rem 7rem' : '10rem 8rem',
           maxWidth: isMobile ? '100%' : '60rem',
         }}
       >
@@ -133,6 +133,8 @@ export default function HeroSection(): React.ReactElement {
             maxWidth: '34ch',           // ↓ shorter measure = easier to scan
             margin: 0,
             marginBottom: isMobile ? '2.8rem' : '3.6rem',
+            overflowWrap: 'anywhere',
+            wordBreak: 'break-word',
           }}
         >
           Gorros quirúrgicos de alta calidad para profesionales que no renuncian al estilo.

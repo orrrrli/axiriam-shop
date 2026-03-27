@@ -90,6 +90,7 @@ export default function MainSection({ slice }: MainSectionProps = {}): React.Rea
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
               minHeight: isMobile ? 'auto' : '70vh',
+              overflow: 'hidden',
             }}
           >
             {/* Image panel */}
@@ -128,10 +129,11 @@ export default function MainSection({ slice }: MainSectionProps = {}): React.Rea
                 background: '#fafafa',
                 padding: isMobile ? '4.8rem 3.2rem' : '8rem',
                 flex: 1,
+                minWidth: 0,
                 order: isMobile ? 1 : isImageLeft ? 1 : 0,
               }}
             >
-              <div style={{ maxWidth: '44ch' }}>
+              <div style={{ maxWidth: '44ch', width: '100%' }}>
                 {/* Eyebrow */}
                 <p
                   style={{

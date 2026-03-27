@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getOrderByNumber, getDesigns } from '@/lib/services/inventory.service';
+import { getOrderByNumber, getDesigns } from '@/services/inventory.service';
 import OrderDetail from '@/components/admin/inventory/orders/order-detail';
 import type { RawMaterial } from '@/types/inventory';
 

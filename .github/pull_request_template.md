@@ -1,7 +1,5 @@
-## 📋 Descripción
+## Descripción
 Resumen claro de los cambios realizados y el problema que resuelven.
-
-Closes # (issue o story de Shortcut)
 
 ---
 
@@ -15,7 +13,7 @@ Closes # (issue o story de Shortcut)
 
 ---
 
-## 🧩 Área del proyecto afectada
+## Área del proyecto afectada
 - [ ] UI / Componentes (Next.js)
 - [ ] Autenticación
 - [ ] Catálogo / Productos
@@ -43,12 +41,12 @@ Describe el flujo que probaste manualmente o las pruebas automatizadas que agreg
 
 ---
 
-## 📸 Capturas de pantalla (si aplica)
+## Capturas de pantalla (si aplica)
 Agrega capturas si hay cambios visuales en la UI.
 
 ---
 
-## ✅ Checklist
+## Checklist
 - [ ] Mi código sigue las convenciones del proyecto (CLAUDE.md)
 - [ ] Hice auto-revisión de mi propio código
 - [ ] No hay `console.log` de debug en el código
@@ -59,10 +57,3 @@ Agrega capturas si hay cambios visuales en la UI.
 ```
 
 ---
-
-## ¿Cómo agregarlo a GitHub?
-
-En tu repositorio crea este archivo:
-```
-.github/
-└── PULL_REQUEST_TEMPLATE.md

@@ -6,8 +6,8 @@ import {
   createWarehouseMaterial,
   updateWarehouseMaterial,
   deleteWarehouseMaterial,
-} from '@/lib/services/admin/warehouse.service';
-import { ServiceResult } from '@/lib/services/admin/types';
+} from '@/services/admin/warehouse.service';
+import { ServiceResult } from '@/services/admin/types';
 
 interface UseWarehouseMutationsReturn {
   saving: boolean;

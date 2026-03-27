@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getStoreOrderById, updateStoreOrder } from '@/lib/services/inventory.service';
+import { getStoreOrderById, updateStoreOrder } from '@/services/inventory.service';
 import { StoreOrderUpdateData } from '@/types/inventory';
 
 async function requireAdmin() {

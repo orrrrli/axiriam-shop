@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getSales } from '@/lib/services/inventory.service';
+import { getSales } from '@/services/inventory.service';
 import SalesView from '@/components/admin/inventory/sales/sales-view';
 
 export default async function SalesPage() {

@@ -6,8 +6,10 @@ import {
   createOrder,
   updateOrder,
   deleteOrder,
-} from '@/lib/services/admin/orders.service';
-import { ServiceResult } from '@/lib/services/admin/types';
+  createWarehouseOrder,
+  WarehouseOrderPayload,
+} from '@/services/admin/orders.service';
+import { ServiceResult } from '@/services/admin/types';
 
 interface UseOrderMutationsReturn {
   saving: boolean;
@@ -15,6 +17,7 @@ interface UseOrderMutationsReturn {
   create: (data: OrderMaterialFormData) => Promise<ServiceResult<OrderMaterial>>;
   update: (id: string, data: OrderMaterialFormData) => Promise<ServiceResult<OrderMaterial>>;
   remove: (id: string) => Promise<ServiceResult<void>>;
+  createFromWarehouse: (payload: WarehouseOrderPayload) => Promise<ServiceResult<OrderMaterial>>;
 }
 
 export function useOrderMutations(): UseOrderMutationsReturn {
@@ -48,5 +51,14 @@ export function useOrderMutations(): UseOrderMutationsReturn {
     }
   }, []);
 
-  return { saving, deleting, create, update, remove };
+  const createFromWarehouse = useCallback(async (payload: WarehouseOrderPayload): Promise<ServiceResult<OrderMaterial>> => {
+    setSaving(true);
+    try {
+      return await createWarehouseOrder(payload);
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  return { saving, deleting, create, update, remove, createFromWarehouse };
 }

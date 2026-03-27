@@ -1,4 +1,4 @@
-import { OrderMaterial, OrderMaterialFormData } from '@/types/inventory';
+import { OrderMaterial, OrderMaterialFormData, OrderMaterialGroup, OrderMaterialStatus } from '@/types/inventory';
 import { ServiceResult } from './types';
 
 /**
@@ -53,6 +53,39 @@ export async function updateOrder(
     const order = await res.json();
     return { success: true, data: order };
   } catch (error) {
+    return { success: false, error: 'Network error occurred' };
+  }
+}
+
+export interface WarehouseOrderPayload {
+  distributor: string;
+  description: string;
+  status: OrderMaterialStatus;
+  materials: OrderMaterialGroup[];
+}
+
+/**
+ * Create an order from warehouse material selection.
+ * Accepts a partial payload without orderNumber (generated server-side).
+ */
+export async function createWarehouseOrder(
+  payload: WarehouseOrderPayload,
+): Promise<ServiceResult<OrderMaterial>> {
+  try {
+    const res = await fetch('/api/admin/inventory/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const error = await res.json() as { error?: string };
+      return { success: false, error: error.error ?? 'Failed to create order' };
+    }
+
+    const order = await res.json() as OrderMaterial;
+    return { success: true, data: order };
+  } catch {
     return { success: false, error: 'Network error occurred' };
   }
 }

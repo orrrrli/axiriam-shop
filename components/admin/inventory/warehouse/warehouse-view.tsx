@@ -9,6 +9,7 @@ import { RawMaterial, RawMaterialFormData, MaterialType } from '@/types/inventor
 import { WAREHOUSE_TYPE_LABELS, EMPTY_WAREHOUSE_FORM } from '@/lib/constants/admin/warehouse.constants';
 import { slugifyItemName } from '@/lib/utils/inventory';
 import { useWarehouseMutations } from '@/lib/hooks/use-warehouse-mutations';
+import { useOrderMutations } from '@/lib/hooks/use-order-mutations';
 import { sileo } from 'sileo';
 import { Modal, DataTable, Column } from '@/components/admin/common';
 import ConfirmToast from '@/components/molecules/confirm-toast';
@@ -17,6 +18,7 @@ import AlertToast from '@/components/molecules/alert-toast';
 export default function WarehouseView({ initialMaterials }: { initialMaterials: RawMaterial[] }): React.ReactElement {
   const router = useRouter();
   const { saving, create, update, remove } = useWarehouseMutations();
+  const { createFromWarehouse } = useOrderMutations();
   const [items, setItems] = useState(initialMaterials);
 
   // ── Form modal ───────────────────────────────────────────────────────────────
@@ -89,24 +91,14 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
         })),
       }],
     };
-    try {
-      const res = await fetch('/api/admin/inventory/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json() as { error?: string };
-        setOrderError(err.error ?? 'Error al crear el pedido');
-      } else {
-        setOrderModalOpen(false);
-        exitSelectionMode();
-        router.push('/admin/inventory/orders');
-      }
-    } catch {
-      setOrderError('Error de red');
-    } finally {
-      setOrderSaving(false);
+    const result = await createFromWarehouse(payload);
+    setOrderSaving(false);
+    if (result.success) {
+      setOrderModalOpen(false);
+      exitSelectionMode();
+      router.push('/admin/inventory/orders');
+    } else {
+      setOrderError(result.error ?? 'Error al crear el pedido');
     }
   }
 

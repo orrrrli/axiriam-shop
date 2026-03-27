@@ -7,8 +7,8 @@ import {
   createQuote,
   updateQuote,
   deleteQuote,
-} from '@/lib/services/admin/quotes.service';
-import { buildCreatePayload, buildUpdatePayload } from '@/lib/services/quote-domain.service';
+} from '@/services/admin/quotes.service';
+import { buildCreatePayload, buildUpdatePayload } from '@/lib/utils/quote';
 import { generateQuotePDFFromFormData, generateQuotePDFFromQuote } from '@/lib/pdf/quote-pdf';
 
 type SortOrder = 'asc' | 'desc';

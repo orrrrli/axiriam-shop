@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getAdminStats } from '@/lib/services/admin.service';
+import { getAdminStats } from '@/services/admin.service';
 import { DollarSign, ShoppingBag, Users, Package, Clock, ExternalLink } from 'lucide-react';
 import { formatPrice } from '@/lib/utils/helpers';
 import Link from 'next/link';

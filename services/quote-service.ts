@@ -10,7 +10,7 @@ import {
 import {
   buildCreatePayload,
   buildUpdatePayload,
-} from '@/lib/services/quote-domain.service';
+} from '@/lib/utils/quote';
 
 export async function getQuotes(): Promise<Quote[]> {
   return repoGetQuotes();

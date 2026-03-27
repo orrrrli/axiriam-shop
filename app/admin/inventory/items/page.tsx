@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getItems, getItemsSalesStats, getDesigns } from '@/lib/services/inventory.service';
+import { getItems, getItemsSalesStats, getDesigns } from '@/services/inventory.service';
 import ItemsView from '@/components/admin/inventory/items/items-view';
 import type { InventoryItem, InventoryItemSalesStats } from '@/types/inventory';
 

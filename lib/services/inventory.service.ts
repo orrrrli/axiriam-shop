@@ -22,6 +22,7 @@ import { slugifyItemName } from '@/lib/utils/inventory';
 import {
   findAllItems,
   findItemById,
+  findItemsByMaterialId,
   createInventoryItem,
   updateInventoryItem,
   deleteInventoryItem,
@@ -30,6 +31,7 @@ import {
   findItemsSalesStats,
   findAllDesigns,
   findDesignById,
+  findDesignsByIds,
   findDesignBySlug,
   createDesignRecord,
   updateDesignRecord,
@@ -118,6 +120,10 @@ export async function updateItem(id: string, data: InventoryItemFormData): Promi
   return updateInventoryItem(id, data);
 }
 
+export async function getItemsByMaterialId(materialId: string): Promise<InventoryItem[]> {
+  return findItemsByMaterialId(materialId);
+}
+
 export async function getItemsSalesStats(): Promise<InventoryItemSalesStats[]> {
   return findItemsSalesStats();
 }
@@ -140,6 +146,10 @@ export async function getDesigns(): Promise<RawMaterial[]> {
 
 export async function getDesignById(id: string): Promise<RawMaterial | null> {
   return findDesignById(id);
+}
+
+export async function getDesignsByIds(ids: string[]): Promise<RawMaterial[]> {
+  return findDesignsByIds(ids);
 }
 
 export async function getDesignBySlug(slug: string): Promise<RawMaterial | null> {

@@ -21,7 +21,6 @@ import {
   InventoryItem,
   InventoryItemFormData,
   ItemCreatePayload,
-  InventoryItemSalesStats,
   InventoryItemCategory,
   MaterialType,
   RawMaterial,
@@ -31,6 +30,7 @@ import { slugifyItemName } from '@/lib/utils/inventory';
 import { useTransitionStore } from '@/lib/store/transitionStore';
 import { useCloudinaryUpload } from '@/lib/hooks/use-cloudinary-upload';
 import { useItemMutations } from '@/lib/hooks/use-item-mutations';
+import { updateWarehouseMaterial } from '@/lib/services/admin/warehouse.service';
 import {
   CATEGORY_LABELS,
   TYPE_LABELS,
@@ -57,13 +57,11 @@ type ItemFormState = Omit<InventoryItemFormData, 'quantityCompleto' | 'quantityS
 
 interface ItemsViewProps {
   initialItems: InventoryItem[];
-  salesStats: Record<string, InventoryItemSalesStats>;
   warehouseMaterials: RawMaterial[];
 }
 
 export default function ItemsView({
   initialItems,
-  salesStats,
   warehouseMaterials,
 }: ItemsViewProps): React.ReactElement {
   const router = useRouter();
@@ -88,8 +86,12 @@ export default function ItemsView({
   const [warehouseSearch, setWarehouseSearch] = useState('');
 
   const [pendingDelete, setPendingDelete] = useState<InventoryItem | null>(null);
+  const [pendingDistribute, setPendingDistribute] = useState<InventoryItem | null>(null);
+  const [distCompleto, setDistCompleto] = useState(0);
+  const [distSencillo, setDistSencillo] = useState(0);
+  const [distributing, setDistributing] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'general' | 'completos' | 'sencillos' | 'ventas'>(
+  const [activeTab, setActiveTab] = useState<'general' | 'completos' | 'sencillos'>(
     'general'
   );
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -126,6 +128,12 @@ export default function ItemsView({
 
     return sorted;
   }, [items, selectedType, sortBy]);
+
+  const warehouseMaterialsById = useMemo(() => {
+    const map: Record<string, RawMaterial> = {};
+    for (const m of warehouseMaterials) map[m.id] = m;
+    return map;
+  }, [warehouseMaterials]);
 
   const filteredWarehouseMaterials = useMemo(() => {
     if (!warehouseSearch.trim()) return warehouseMaterials;
@@ -208,11 +216,11 @@ export default function ItemsView({
       const result = await update(editingItem.id, basePayload);
       if (result.success) {
         setModalOpen(false);
-        sileo.success({ title: 'Producto actualizado correctamente' });
+        sileo.success({ title: `"${result.data.name}" actualizado correctamente` });
         router.refresh();
       } else {
         setSaveError(result.error);
-        sileo.error({ title: 'Error al guardar cambios' });
+        sileo.error({ title: `Error al actualizar "${editingItem.name}"` });
       }
       return;
     }
@@ -235,11 +243,11 @@ export default function ItemsView({
     const result = await create(createPayload);
     if (result.success) {
       setModalOpen(false);
-      sileo.success({ title: 'Producto creado correctamente' });
+      sileo.success({ title: `"${result.data.name}" creado correctamente` });
       router.refresh();
     } else {
       setSaveError(result.error);
-      sileo.error({ title: 'Error al crear el producto' });
+      sileo.error({ title: `Error al crear "${form.name}"` });
     }
   }
 
@@ -269,29 +277,84 @@ export default function ItemsView({
     });
   }
 
+  function openDistribute(item: InventoryItem): void {
+    const rendimiento = warehouseMaterialsById[item.materials[0]]?.quantity ?? 0;
+    setPendingDistribute(item);
+    setDistCompleto(rendimiento);
+    setDistSencillo(0);
+  }
+
+  async function handleDistribute(): Promise<void> {
+    if (!pendingDistribute) return;
+    const material = warehouseMaterialsById[pendingDistribute.materials[0]];
+    setDistributing(true);
+    const payload: InventoryItemFormData = {
+      name: pendingDistribute.name,
+      category: pendingDistribute.category,
+      type: pendingDistribute.type,
+      description: pendingDistribute.description,
+      quantityCompleto: pendingDistribute.quantityCompleto + distCompleto,
+      quantitySencillo: pendingDistribute.quantitySencillo + distSencillo,
+      price: pendingDistribute.price,
+      photoUrl: pendingDistribute.photoUrl,
+      tags: pendingDistribute.tags,
+      materials: pendingDistribute.materials,
+    };
+    const result = await update(pendingDistribute.id, payload);
+    if (!result.success) {
+      setDistributing(false);
+      sileo.error({ title: `Error al distribuir el rendimiento de "${pendingDistribute.name}"` });
+      return;
+    }
+    if (material) {
+      await updateWarehouseMaterial(material.id, { ...material, quantity: 0 });
+    }
+    setDistributing(false);
+    setItems((prev) => prev.map((i) => (i.id === pendingDistribute.id ? result.data : i)));
+    setPendingDistribute(null);
+    sileo.success({ title: `Rendimiento de "${result.data.name}" distribuido correctamente` });
+    router.refresh();
+  }
+
   const actionsCol = {
     header: 'Acciones',
     key: 'id',
-    render: (_: string, row: InventoryItem) => (
-      <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
-        <button
-          type="button"
-          onClick={() => openEdit(row)}
-          className="p-[0.8rem] text-gray-400 hover:text-[#101010] hover:bg-gray-100 rounded-[0.6rem] transition-colors duration-150"
-          aria-label="Editar"
-        >
-          <Pencil className="w-[1.8rem] h-[1.8rem]" />
-        </button>
-        <button
-          type="button"
-          onClick={() => handleDelete(row)}
-          className="p-[0.8rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
-          aria-label="Eliminar"
-        >
-          <Trash2 className="w-[1.8rem] h-[1.8rem]" />
-        </button>
-      </div>
-    ),
+    render: (_: string, row: InventoryItem) => {
+      const rendimiento = warehouseMaterialsById[row.materials[0]]?.quantity ?? 0;
+      return (
+        <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => rendimiento > 0 && openDistribute(row)}
+            disabled={rendimiento === 0}
+            className={`p-[0.8rem] rounded-[0.6rem] transition-colors duration-150 ${
+              rendimiento > 0
+                ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50'
+                : 'text-gray-300 cursor-not-allowed'
+            }`}
+            aria-label="Distribuir rendimiento"
+          >
+            <Plus className="w-[1.8rem] h-[1.8rem]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => openEdit(row)}
+            className="p-[0.8rem] text-gray-400 hover:text-[#101010] hover:bg-gray-100 rounded-[0.6rem] transition-colors duration-150"
+            aria-label="Editar"
+          >
+            <Pencil className="w-[1.8rem] h-[1.8rem]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDelete(row)}
+            className="p-[0.8rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
+            aria-label="Eliminar"
+          >
+            <Trash2 className="w-[1.8rem] h-[1.8rem]" />
+          </button>
+        </div>
+      );
+    },
   };
 
   const baseColumns = [
@@ -328,6 +391,21 @@ export default function ItemsView({
     },
   ];
 
+  const rendimientoCol = {
+    header: 'Rendimiento',
+    key: 'materials',
+    render: (_: unknown, row: InventoryItem) => {
+      const material = warehouseMaterialsById[row.materials[0]];
+      if (!material) return <span className="text-subtle text-[1.2rem]">—</span>;
+      return (
+        <span className="font-semibold text-heading">
+          {material.quantity}{' '}
+          <span className="text-subtle font-normal text-[1.2rem]">items</span>
+        </span>
+      );
+    },
+  };
+
   const completoCol = { header: 'Completo', key: 'quantityCompleto' };
   const sencilloCol = { header: 'Sencillo', key: 'quantitySencillo' };
   const precioCol = {
@@ -336,33 +414,17 @@ export default function ItemsView({
     render: (value: number) => <strong className="text-heading">{formatPrice(value)}</strong>,
   };
 
-  const ventasQtyCol = {
-    header: 'Uds. vendidas',
-    key: 'ventas_qty',
-    render: (_: unknown, row: InventoryItem) => (
-      <span className="font-semibold text-heading">{salesStats[row.id]?.quantitySold ?? 0}</span>
-    ),
-  };
-
-  const ventasCountCol = {
-    header: 'Nº ventas',
-    key: 'ventas_count',
-    render: (_: unknown, row: InventoryItem) => salesStats[row.id]?.salesCount ?? 0,
-  };
-
   const columns = useMemo(() => {
     switch (activeTab) {
       case 'completos':
-        return [...baseColumns, completoCol, precioCol, actionsCol];
+        return [...baseColumns, rendimientoCol, completoCol, precioCol, actionsCol];
       case 'sencillos':
-        return [...baseColumns, sencilloCol, precioCol, actionsCol];
-      case 'ventas':
-        return [...baseColumns, ventasQtyCol, ventasCountCol, precioCol];
+        return [...baseColumns, rendimientoCol, sencilloCol, precioCol, actionsCol];
       default:
-        return [...baseColumns, completoCol, sencilloCol, precioCol, actionsCol];
+        return [...baseColumns, rendimientoCol, sencilloCol, completoCol, precioCol, actionsCol];
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, salesStats]);
+  }, [activeTab, warehouseMaterialsById]);
 
   return (
     <>
@@ -407,6 +469,10 @@ export default function ItemsView({
         onRowClick={(item) => {
           startItemDetailNavigation();
           router.push(`/admin/inventory/items/${slugifyItemName(item.name)}`);
+        }}
+        rowClassName={(item) => {
+          const rendimiento = warehouseMaterialsById[item.materials[0]]?.quantity ?? 0;
+          return rendimiento > 0 ? '!bg-blue-50 hover:!bg-blue-100' : '';
         }}
       />
 
@@ -942,6 +1008,177 @@ export default function ItemsView({
         </div>
       </SlideOver>
     </div>
+
+    {/* ── MODAL DISTRIBUCIÓN DE RENDIMIENTO ──────────────────────────────── */}
+    {pendingDistribute && (() => {
+      const material = warehouseMaterialsById[pendingDistribute.materials[0]];
+      const rendimiento = material?.quantity ?? 0;
+      const total = distCompleto + distSencillo;
+      const isValid = total === rendimiento;
+
+      return (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-modal animate-fade-in"
+          onClick={() => setPendingDistribute(null)}
+        >
+          <div
+            className="bg-white w-full max-w-[44rem] rounded-[0.8rem] shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-[2.4rem] pt-[2.4rem] pb-[2rem] border-b border-border">
+              <p className="text-[1.1rem] text-subtle mb-[0.3rem]">
+                {material?.name ?? 'Material'} · Rendimiento: {rendimiento} items
+              </p>
+              <h2 className="text-[2rem] font-bold text-heading">Distribuir rendimiento</h2>
+            </div>
+
+            {/* Body */}
+            <div className="px-[2.4rem] py-[2.4rem] flex flex-col gap-[2rem]">
+              {/* Stock actual */}
+              <div className="flex items-center gap-[1.6rem] p-[1.4rem] bg-[#f5f5f5] rounded-[0.6rem]">
+                <div className="flex-1 text-center">
+                  <p className="text-[1.1rem] text-subtle uppercase tracking-wide mb-[0.2rem]">Stock actual completo</p>
+                  <p className="text-[2rem] font-bold text-heading">{pendingDistribute.quantityCompleto}</p>
+                </div>
+                <div className="w-px h-[3.2rem] bg-border" />
+                <div className="flex-1 text-center">
+                  <p className="text-[1.1rem] text-subtle uppercase tracking-wide mb-[0.2rem]">Stock actual sencillo</p>
+                  <p className="text-[2rem] font-bold text-heading">{pendingDistribute.quantitySencillo}</p>
+                </div>
+              </div>
+
+              {/* Distribución */}
+              <div>
+                <p className="text-[1.3rem] font-medium text-heading mb-[1.2rem]">
+                  Distribuye los <span className="font-bold">{rendimiento} items</span> de rendimiento:
+                </p>
+                <div className="grid grid-cols-2 gap-[1.6rem]">
+                  <div>
+                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.8rem]">Completo</label>
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.max(0, distCompleto - 1);
+                          setDistCompleto(next);
+                          setDistSencillo(rendimiento - next);
+                        }}
+                        className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                      >−</button>
+                      <input
+                        type="number"
+                        value={distCompleto}
+                        onChange={(e) => {
+                          const val = Math.min(rendimiento, Math.max(0, Number(e.target.value) || 0));
+                          setDistCompleto(val);
+                          setDistSencillo(rendimiento - val);
+                        }}
+                        min={0}
+                        max={rendimiento}
+                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.min(rendimiento, distCompleto + 1);
+                          setDistCompleto(next);
+                          setDistSencillo(rendimiento - next);
+                        }}
+                        className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-r-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                      >+</button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.8rem]">Sencillo</label>
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.max(0, distSencillo - 1);
+                          setDistSencillo(next);
+                          setDistCompleto(rendimiento - next);
+                        }}
+                        className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                      >−</button>
+                      <input
+                        type="number"
+                        value={distSencillo}
+                        onChange={(e) => {
+                          const val = Math.min(rendimiento, Math.max(0, Number(e.target.value) || 0));
+                          setDistSencillo(val);
+                          setDistCompleto(rendimiento - val);
+                        }}
+                        min={0}
+                        max={rendimiento}
+                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.min(rendimiento, distSencillo + 1);
+                          setDistSencillo(next);
+                          setDistCompleto(rendimiento - next);
+                        }}
+                        className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-r-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                      >+</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total indicator */}
+                <p className={`mt-[1.2rem] text-[1.2rem] font-medium ${isValid ? 'text-green-600' : 'text-red-500'}`}>
+                  {total} / {rendimiento} asignados
+                  {!isValid && ` · Faltan ${rendimiento - total} por asignar`}
+                </p>
+              </div>
+
+              {/* Stock preview */}
+              <div className="p-[1.4rem] bg-[#f0f4ff] border border-[#c7d7ff] rounded-[0.6rem]">
+                <p className="text-[1.1rem] text-subtle uppercase tracking-wide mb-[1rem]">Resultado estimado</p>
+                <div className="flex items-center gap-[1.6rem]">
+                  <div className="flex-1 text-center">
+                    <p className="text-[1.1rem] text-subtle mb-[0.2rem]">Completo</p>
+                    <p className="text-[1.5rem] font-semibold text-admin-muted line-through">{pendingDistribute.quantityCompleto}</p>
+                    <p className="text-[2rem] font-bold text-heading">{pendingDistribute.quantityCompleto + distCompleto}</p>
+                  </div>
+                  <div className="w-px h-[4rem] bg-[#c7d7ff]" />
+                  <div className="flex-1 text-center">
+                    <p className="text-[1.1rem] text-subtle mb-[0.2rem]">Sencillo</p>
+                    <p className="text-[1.5rem] font-semibold text-admin-muted line-through">{pendingDistribute.quantitySencillo}</p>
+                    <p className="text-[2rem] font-bold text-heading">{pendingDistribute.quantitySencillo + distSencillo}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            {/* Footer */}
+            <div className="px-[2.4rem] pb-[2.4rem] pt-[0.4rem] grid grid-cols-2 gap-[1.2rem] border-t border-border">
+              <button
+                type="button"
+                onClick={() => setPendingDistribute(null)}
+                className="py-[1.2rem] bg-white border border-border text-heading text-[1.4rem] font-semibold rounded-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDistribute}
+                disabled={!isValid || distributing}
+                className="py-[1.2rem] bg-heading text-white text-[1.4rem] font-semibold rounded-[0.4rem] hover:opacity-90 transition-opacity duration-150 flex items-center justify-center gap-[0.8rem] disabled:opacity-40"
+              >
+                {distributing && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
+                Confirmar distribución
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
     </>
   );
 }

@@ -172,7 +172,7 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
 
     if (result.success) {
       setModalOpen(false);
-      sileo.success({ title: editingItem ? 'Material actualizado correctamente' : 'Material creado correctamente' });
+      sileo.success({ title: editingItem ? `"${result.data.name}" actualizado correctamente` : `"${result.data.name}" creado correctamente` });
       if (editingItem) {
         setItems((prev) => prev.map((i) => (i.id === editingItem.id ? result.data : i)));
       } else {
@@ -181,7 +181,7 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
       router.refresh();
     } else {
       setSaveError(result.error);
-      sileo.error({ title: editingItem ? 'Error al actualizar el material' : 'Error al crear el material' });
+      sileo.error({ title: editingItem ? `Error al actualizar "${editingItem.name}"` : 'Error al crear el material' });
     }
   }
 
@@ -194,31 +194,24 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
     setPendingDelete(null);
   }
 
-  function handleDeleteConfirm(): void {
+  async function handleDeleteConfirm(): Promise<void> {
     if (!pendingDelete) return;
     const item = pendingDelete;
     setPendingDelete(null);
 
-    const promise = remove(item.id).then((result) => {
-      if (!result.success) {
-        if (result.code === 'MATERIAL_IN_USE') {
-          setBlockedDelete(item);
-          throw new Error('MATERIAL_IN_USE');
-        }
-        throw new Error(result.error ?? 'Error al eliminar');
-      }
-      setItems((prev) => prev.filter((i) => i.id !== item.id));
-      return result;
-    });
+    const result = await remove(item.id);
 
-    sileo.promise(promise, {
-      loading: { title: `Eliminando "${item.name}"...` },
-      success: { title: `"${item.name}" eliminado correctamente` },
-      error: (err: unknown) => {
-        if (err instanceof Error && err.message === 'MATERIAL_IN_USE') return null;
-        return { title: 'Error al eliminar el material' };
-      },
-    });
+    if (!result.success) {
+      if (result.code === 'MATERIAL_IN_USE') {
+        setBlockedDelete(item);
+      } else {
+        sileo.error({ title: `Error al eliminar "${item.name}"` });
+      }
+      return;
+    }
+
+    setItems((prev) => prev.filter((i) => i.id !== item.id));
+    sileo.success({ title: `"${item.name}" eliminado correctamente` });
   }
 
   // ── Table columns ────────────────────────────────────────────────────────────

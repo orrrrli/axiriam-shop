@@ -20,6 +20,7 @@ interface DataTableProps<T extends { id: string }> {
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   onToggleSelectAll?: () => void;
+  rowClassName?: (item: T) => string;
 }
 
 export function DataTable<T extends { id: string }>({
@@ -35,6 +36,7 @@ export function DataTable<T extends { id: string }>({
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
+  rowClassName,
 }: DataTableProps<T>): React.ReactElement {
   const hasActions = (onEdit || onDelete) && !selectionMode;
   const allSelected = data.length > 0 && selectedIds?.size === data.length;
@@ -111,7 +113,7 @@ export function DataTable<T extends { id: string }>({
                       : onRowClick
                       ? 'hover:bg-admin-bg cursor-pointer'
                       : 'hover:bg-admin-bg'
-                  }`}
+                  } ${rowClassName?.(row) ?? ''}`}
                 >
                   {selectionMode && (
                     <td className="py-[1.2rem] px-[2rem] w-[4rem]">

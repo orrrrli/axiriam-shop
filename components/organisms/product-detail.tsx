@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cartStore';
 import { formatPrice } from '@/lib/utils/helpers';
+import { getProductViewTransitionNames } from '@/lib/utils/view-transition';
 import { toast } from 'react-hot-toast';
 import type { Product, Review } from '@/types/product';
 
@@ -60,7 +61,16 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
 
 // ─── Image carousel ───────────────────────────────────────────────────────────
 
-function ImageCarousel({ images }: { images: string[] }): React.ReactElement {
+function ImageCarousel({
+  images,
+  transitionNames,
+}: {
+  images: string[];
+  transitionNames?: {
+    card: string;
+    image: string;
+  };
+}): React.ReactElement {
   const [active, setActive] = useState(0);
 
   const prev = useCallback(() => setActive((i) => (i - 1 + images.length) % images.length), [images.length]);
@@ -76,9 +86,15 @@ function ImageCarousel({ images }: { images: string[] }): React.ReactElement {
   }, [prev, next]);
 
   return (
-    <div className="flex flex-col gap-[1.6rem]">
+    <div
+      className="flex flex-col gap-[1.6rem]"
+      style={{ viewTransitionName: transitionNames?.card ?? 'none' }}
+    >
       {/* Main image */}
-      <div className="relative aspect-square bg-[#f7f7f7] rounded-[1.6rem] overflow-hidden group">
+      <div
+        className="relative aspect-square bg-[#f7f7f7] rounded-[1.6rem] overflow-hidden group"
+        style={{ viewTransitionName: transitionNames?.image ?? 'none' }}
+      >
         <div
           className="flex w-full h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
           style={{ transform: `translateX(-${active * 100}%)` }}
@@ -296,6 +312,7 @@ export default function ProductDetail({ product }: ProductDetailProps): React.Re
   const items      = useCartStore((state) => state.items);
 
   const productId  = product._id || product.id || '';
+  const transitionNames = useMemo(() => getProductViewTransitionNames(productId), [productId]);
   const isInCart   = items.some((i) => i.id === productId);
   const cartItem   = items.find((i) => i.id === productId);
 
@@ -341,7 +358,7 @@ export default function ProductDetail({ product }: ProductDetailProps): React.Re
       <div className="px-[5rem] max-xs:px-[2rem] grid grid-cols-1 lg:grid-cols-2 gap-[5rem] lg:gap-[7rem]">
 
         {/* Carousel */}
-        <ImageCarousel images={images} />
+        <ImageCarousel images={images} transitionNames={transitionNames} />
 
         {/* Info panel */}
         <div className="flex flex-col">

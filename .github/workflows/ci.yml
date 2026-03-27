@@ -7,7 +7,7 @@ jobs:
   ci:
     name: Build & Tests
     runs-on: ubuntu-latest
-    environment: dev
+    environment: Dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -206,7 +206,38 @@
   font-family: var(--font-montserrat), sans-serif;
 }
 
+/* ── Sileo toast overrides ───────────────────────────────────────────────── */
+:root {
+  --sileo-width: 920px;
+  --sileo-height: 130px;
+}
 
+[data-sileo-title] {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  font-family: var(--font-fustat), sans-serif !important;
+  text-transform: none !important;
+}
+
+[data-sileo-description] {
+  font-size: 1.4rem !important;
+  font-weight: 300 !important;
+  line-height: 1.6 !important;
+  padding: 2rem 2.5rem 2.5rem !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-family: var(--font-inter), sans-serif !important;
+}
+
+[data-sileo-badge] {
+  height: 28px !important;
+  width: 28px !important;
+}
+
+[data-sileo-badge] svg {
+  width: 14px !important;
+  height: 14px !important;
+}
 /* ============================================
    ADMIN TYPOGRAPHY
    Poppins → structure (headings, labels, nav, buttons, th)
@@ -311,42 +342,3 @@
   }
 }
 
-@supports (view-transition-name: none) {
-  /* Hacemos un cross-fade suave para toda la pagina (root) */
-  ::view-transition-old(root) {
-    animation: 250ms cubic-bezier(0.4, 0, 0.2, 1) both fade-out;
-  }
-  ::view-transition-new(root) {
-    animation: 250ms cubic-bezier(0.4, 0, 0.2, 1) both fade-in;
-  }
-
-  /* Dejamos que los shared elements (la card, la imagen) hagan su magia de morphing SOLOS.
-     Al no definirles transform: scale a *, el navegador interpolara su tamanio y posicion
-     desde el catalogo hasta el header del producto sin que "rebote" ni se rompa. */
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  @supports (view-transition-name: none) {
-    ::view-transition-old(root),
-    ::view-transition-new(root),
-    ::view-transition-old(*),
-    ::view-transition-new(*) {
-      animation-duration: 1ms !important;
-      animation-timing-function: linear !important;
-    }
-
-    ::view-transition-group(*) {
-      animation-duration: 1ms !important;
-    }
-  }
-}

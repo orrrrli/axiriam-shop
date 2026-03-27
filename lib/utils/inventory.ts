@@ -1,4 +1,4 @@
-import { MaterialType } from '@/types/inventory';
+import { MaterialType, ItemCreatePayload } from '@/types/inventory';
 
 // ─── SLUG ─────────────────────────────────────────────────
 
@@ -68,7 +68,7 @@ interface ItemValidationError {
   field: string;
 }
 
-export function validateItemBody(body: Record<string, unknown>): ItemValidationError | null {
+export function validateItemBody(body: ItemCreatePayload): ItemValidationError | null {
   if (typeof body.category === 'string' && !isValidCategory(body.category)) {
     return { code: 'INVALID_CATEGORY', message: 'Category must be "bandana" or "gorrito"', field: 'category' };
   }

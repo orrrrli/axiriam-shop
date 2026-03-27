@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { sileo } from 'sileo';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -40,8 +41,8 @@ import { WAREHOUSE_TYPE_LABELS } from '@/lib/constants/admin/warehouse.constants
 import { DataTable } from '@/components/admin/common/organisms/data-table';
 import { ProductTableFilters } from '@/components/admin/common/organisms/product-table-filters';
 import { SlideOver } from '@/components/admin/common/organisms/slide-over';
-import { Modal } from '@/components/admin/common/organisms/modal';
 import { Button } from '@/components/admin/common/atoms/button';
+import ConfirmToast from '@/components/molecules/confirm-toast';
 
 const INPUT =
   'w-full bg-white border border-border text-heading text-[1.4rem] px-[1.2rem] py-[1rem] rounded-[0.4rem] placeholder-gray-400 focus:outline-none focus:border-admin-active-border transition-colors duration-150';
@@ -60,10 +61,14 @@ interface ItemsViewProps {
   warehouseMaterials: RawMaterial[];
 }
 
-export default function ItemsView({ initialItems, salesStats, warehouseMaterials }: ItemsViewProps): React.ReactElement {
+export default function ItemsView({
+  initialItems,
+  salesStats,
+  warehouseMaterials,
+}: ItemsViewProps): React.ReactElement {
   const router = useRouter();
   const startItemDetailNavigation = useTransitionStore((s) => s.startItemDetailNavigation);
-  const { saving, deleting, create, update, remove } = useItemMutations();
+  const { saving, create, update, remove } = useItemMutations();
 
   const [items, setItems] = useState<InventoryItem[]>(initialItems);
 
@@ -74,22 +79,22 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [form, setForm] = useState<ItemFormState>(EMPTY_ITEM_FORM);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [linkWarehouse, setLinkWarehouse] = useState(false);
   const [warehouseMaterialId, setWarehouseMaterialId] = useState('');
   const [materialConsumedQty, setMaterialConsumedQty] = useState<number | ''>(1);
   const [warehouseSearch, setWarehouseSearch] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'general' | 'completos' | 'sencillos' | 'ventas'>('general');
+  const [pendingDelete, setPendingDelete] = useState<InventoryItem | null>(null);
+
+  const [activeTab, setActiveTab] = useState<'general' | 'completos' | 'sencillos' | 'ventas'>(
+    'general'
+  );
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'date-newest' | 'date-oldest'>(
-    'date-newest',
+    'date-newest'
   );
 
   const filteredAndSortedItems = useMemo(() => {
@@ -187,7 +192,7 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
       return;
     }
     const isBrush = form.type === 'brush';
-    const quantityCompleto = isBrush ? 0 : (Number(form.quantityCompleto) || 0);
+    const quantityCompleto = isBrush ? 0 : Number(form.quantityCompleto) || 0;
     const quantitySencillo = Number(form.quantitySencillo) || 0;
     if (!isBrush && quantityCompleto <= 0) {
       setSaveError('La cantidad Completo es requerida y debe ser mayor a 0.');
@@ -203,9 +208,11 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
       const result = await update(editingItem.id, basePayload);
       if (result.success) {
         setModalOpen(false);
+        sileo.success({ title: 'Producto actualizado correctamente' });
         router.refresh();
       } else {
         setSaveError(result.error);
+        sileo.error({ title: 'Error al guardar cambios' });
       }
       return;
     }
@@ -228,31 +235,38 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
     const result = await create(createPayload);
     if (result.success) {
       setModalOpen(false);
+      sileo.success({ title: 'Producto creado correctamente' });
       router.refresh();
     } else {
       setSaveError(result.error);
+      sileo.error({ title: 'Error al crear el producto' });
     }
   }
 
-  function openDeleteModal(item: InventoryItem): void {
-    setItemToDelete(item);
-    setIsDeleteModalOpen(true);
+  function handleDelete(item: InventoryItem): void {
+    setPendingDelete(item);
   }
 
-  function closeDeleteModal(): void {
-    setIsDeleteModalOpen(false);
-    setItemToDelete(null);
+  function handleDeleteCancel(): void {
+    setPendingDelete(null);
   }
 
-  async function handleDeleteConfirm(): Promise<void> {
-    if (!itemToDelete) return;
-    setDeletingId(itemToDelete.id);
-    const result = await remove(itemToDelete.id);
-    if (result.success) {
-      setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
-      closeDeleteModal();
-    }
-    setDeletingId(null);
+  function handleDeleteConfirm(): void {
+    if (!pendingDelete) return;
+    const item = pendingDelete;
+    setPendingDelete(null);
+
+    const promise = remove(item.id).then((result) => {
+      if (!result.success) throw new Error(result.error ?? 'Error al eliminar');
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      return result;
+    });
+
+    sileo.promise(promise, {
+      loading: { title: `Eliminando "${item.name}"...` },
+      success: { title: `"${item.name}" eliminado correctamente` },
+      error: { title: 'Error al eliminar el producto' },
+    });
   }
 
   const actionsCol = {
@@ -270,7 +284,7 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
         </button>
         <button
           type="button"
-          onClick={() => openDeleteModal(row)}
+          onClick={() => handleDelete(row)}
           className="p-[0.8rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
           aria-label="Eliminar"
         >
@@ -286,7 +300,13 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
       key: 'photoUrl',
       render: (value: string | undefined, row: InventoryItem) =>
         value ? (
-          <Image src={value} alt={row.name} width={50} height={50} className="object-cover rounded" />
+          <Image
+            src={value}
+            alt={row.name}
+            width={50}
+            height={50}
+            className="object-cover rounded"
+          />
         ) : (
           <ImageIcon className="w-[3rem] h-[3rem] text-subtle opacity-30" />
         ),
@@ -320,9 +340,7 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
     header: 'Uds. vendidas',
     key: 'ventas_qty',
     render: (_: unknown, row: InventoryItem) => (
-      <span className="font-semibold text-heading">
-        {salesStats[row.id]?.quantitySold ?? 0}
-      </span>
+      <span className="font-semibold text-heading">{salesStats[row.id]?.quantitySold ?? 0}</span>
     ),
   };
 
@@ -343,10 +361,18 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
       default:
         return [...baseColumns, completoCol, sencilloCol, precioCol, actionsCol];
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, salesStats]);
 
   return (
+    <>
+    {pendingDelete && (
+      <ConfirmToast
+        productName={pendingDelete.name}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+    )}
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       <div className="flex items-center justify-between mb-[3rem]">
         <div>
@@ -355,7 +381,10 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
             {items.length} productos en inventario
           </p>
         </div>
-        <button className="button flex items-center gap-[0.8rem] text-[1.3rem]" onClick={openCreate}>
+        <button
+          className="button flex items-center gap-[0.8rem] text-[1.3rem]"
+          onClick={openCreate}
+        >
           <Plus className="w-[1.6rem] h-[1.6rem]" /> Nuevo Producto
         </button>
       </div>
@@ -397,7 +426,11 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
               <Button variant="secondary" className="w-full" onClick={() => setModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button className="w-full flex items-center justify-center gap-[0.8rem]" onClick={handleSave} disabled={saving}>
+              <Button
+                className="w-full flex items-center justify-center gap-[0.8rem]"
+                onClick={handleSave}
+                disabled={saving}
+              >
                 {saving && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
                 {editingItem ? 'Guardar Cambios' : 'Crear Producto'}
               </Button>
@@ -406,7 +439,6 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
         }
       >
         <div className="flex flex-col">
-
           {/* ── IMAGEN ──────────────────────────────────────────────────────── */}
           <div className="pb-[2rem] border-b border-border">
             <p className="text-[1.1rem] font-semibold uppercase tracking-widest text-subtle mb-[1.2rem]">
@@ -493,35 +525,49 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
               {/* Categoría + Tipo */}
               <div className="grid grid-cols-2 gap-[1.2rem]">
                 <div>
-                  <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">Categoría</label>
+                  <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                    Categoría
+                  </label>
                   <div className="relative">
                     <select
                       className={SELECT_CLASS}
                       value={form.category}
-                      onChange={(e) => setForm({ ...form, category: e.target.value as InventoryItemCategory })}
+                      onChange={(e) =>
+                        setForm({ ...form, category: e.target.value as InventoryItemCategory })
+                      }
                       aria-label="Categoría del producto"
                     >
                       {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
+                        <option key={v} value={v}>
+                          {l}
+                        </option>
                       ))}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-[1.4rem] top-1/2 -translate-y-1/2 w-[1.6rem] h-[1.6rem] text-subtle" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">Tipo</label>
+                  <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                    Tipo
+                  </label>
                   <div className="relative">
                     <select
                       className={SELECT_CLASS}
                       value={form.type}
                       onChange={(e) => {
                         const type = e.target.value as MaterialType;
-                        setForm({ ...form, type, ...(type === 'brush' ? { quantityCompleto: 0 } : {}) });
+                        setForm({
+                          ...form,
+                          type,
+                          ...(type === 'brush' ? { quantityCompleto: 0 } : {}),
+                        });
                       }}
                       aria-label="Tipo de material"
                     >
                       {Object.entries(TYPE_LABELS).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
+                        <option key={v} value={v}>
+                          {l}
+                        </option>
                       ))}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-[1.4rem] top-1/2 -translate-y-1/2 w-[1.6rem] h-[1.6rem] text-subtle" />
@@ -539,13 +585,22 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
             <div className="flex flex-col gap-[1.4rem]">
               {/* Precio */}
               <div>
-                <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">Precio <span className="text-red-500">*</span></label>
+                <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                  Precio <span className="text-red-500">*</span>
+                </label>
                 <div className="relative max-w-[16rem]">
-                  <span className="absolute left-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.4rem] pointer-events-none">$</span>
+                  <span className="absolute left-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.4rem] pointer-events-none">
+                    $
+                  </span>
                   <input
                     type="number"
                     value={form.price === 0 ? '' : form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value === '' ? 0 : Number(e.target.value) })}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        price: e.target.value === '' ? 0 : Number(e.target.value),
+                      })
+                    }
                     onWheel={(e) => e.currentTarget.blur()}
                     min={0}
                     step={0.01}
@@ -559,47 +614,68 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
               {/* Completo + Sencillo steppers */}
               <div className={form.type === 'brush' ? '' : 'grid grid-cols-2 gap-[2rem]'}>
                 {/* Completo */}
-                {form.type !== 'brush' && <div>
-                  <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
-                    Completo <span className="font-normal text-subtle">unidades</span> <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, quantityCompleto: Math.max(0, Number(form.quantityCompleto) - 1) })}
-                      className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
-                      aria-label="Disminuir completo"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      value={form.quantityCompleto}
-                      onChange={(e) => setForm({ ...form, quantityCompleto: Math.max(0, Number(e.target.value) || 0) })}
-                      min={0}
-                      className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
-                      aria-label="Cantidad completo"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, quantityCompleto: Number(form.quantityCompleto) + 1 })}
-                      className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-r-[0.4rem] hover:bg-body-alt transition-colors duration-150"
-                      aria-label="Aumentar completo"
-                    >
-                      +
-                    </button>
+                {form.type !== 'brush' && (
+                  <div>
+                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                      Completo <span className="font-normal text-subtle">unidades</span>{' '}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            quantityCompleto: Math.max(0, Number(form.quantityCompleto) - 1),
+                          })
+                        }
+                        className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                        aria-label="Disminuir completo"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        value={form.quantityCompleto}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            quantityCompleto: Math.max(0, Number(e.target.value) || 0),
+                          })
+                        }
+                        min={0}
+                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                        aria-label="Cantidad completo"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm({ ...form, quantityCompleto: Number(form.quantityCompleto) + 1 })
+                        }
+                        className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-r-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                        aria-label="Aumentar completo"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                </div>}
+                )}
 
                 {/* Sencillo */}
                 <div>
                   <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
-                    Sencillo <span className="font-normal text-subtle">unidades</span> <span className="text-red-500">*</span>
+                    Sencillo <span className="font-normal text-subtle">unidades</span>{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center">
                     <button
                       type="button"
-                      onClick={() => setForm({ ...form, quantitySencillo: Math.max(0, Number(form.quantitySencillo) - 1) })}
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          quantitySencillo: Math.max(0, Number(form.quantitySencillo) - 1),
+                        })
+                      }
                       className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
                       aria-label="Disminuir sencillo"
                     >
@@ -608,14 +684,21 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
                     <input
                       type="number"
                       value={form.quantitySencillo}
-                      onChange={(e) => setForm({ ...form, quantitySencillo: Math.max(0, Number(e.target.value) || 0) })}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          quantitySencillo: Math.max(0, Number(e.target.value) || 0),
+                        })
+                      }
                       min={0}
                       className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
                       aria-label="Cantidad sencillo"
                     />
                     <button
                       type="button"
-                      onClick={() => setForm({ ...form, quantitySencillo: Number(form.quantitySencillo) + 1 })}
+                      onClick={() =>
+                        setForm({ ...form, quantitySencillo: Number(form.quantitySencillo) + 1 })
+                      }
                       className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-r-[0.4rem] hover:bg-body-alt transition-colors duration-150"
                       aria-label="Aumentar sencillo"
                     >
@@ -649,16 +732,21 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
                   }`}
                 >
                   {linkWarehouse ? (
-                    <><Link2 className="w-[1.2rem] h-[1.2rem]" /> Vinculado</>
+                    <>
+                      <Link2 className="w-[1.2rem] h-[1.2rem]" /> Vinculado
+                    </>
                   ) : (
-                    <><Link2Off className="w-[1.2rem] h-[1.2rem]" /> Sin vincular</>
+                    <>
+                      <Link2Off className="w-[1.2rem] h-[1.2rem]" /> Sin vincular
+                    </>
                   )}
                 </button>
               </div>
 
               {!linkWarehouse && (
                 <p className="text-[1.2rem] text-subtle leading-relaxed">
-                  Se creará automáticamente un registro en Almacén con rendimiento 0 usando la imagen del producto.
+                  Se creará automáticamente un registro en Almacén con rendimiento 0 usando la
+                  imagen del producto.
                 </p>
               )}
 
@@ -702,7 +790,9 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
                               {WAREHOUSE_TYPE_LABELS[m.type] ?? m.type}
                             </p>
                           </div>
-                          <span className={`text-[1.2rem] font-semibold ${m.quantity === 0 ? 'text-red-500' : 'text-heading'}`}>
+                          <span
+                            className={`text-[1.2rem] font-semibold ${m.quantity === 0 ? 'text-red-500' : 'text-heading'}`}
+                          >
                             {m.quantity} <span className="font-normal text-subtle">disp.</span>
                           </span>
                         </button>
@@ -728,7 +818,11 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
                         <input
                           type="number"
                           value={materialConsumedQty}
-                          onChange={(e) => setMaterialConsumedQty(e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))}
+                          onChange={(e) =>
+                            setMaterialConsumedQty(
+                              e.target.value === '' ? '' : Math.max(1, Number(e.target.value))
+                            )
+                          }
                           min={1}
                           className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
                         />
@@ -742,7 +836,9 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
                         </button>
                       </div>
                       {(() => {
-                        const selected = warehouseMaterials.find((m) => m.id === warehouseMaterialId);
+                        const selected = warehouseMaterials.find(
+                          (m) => m.id === warehouseMaterialId
+                        );
                         const consumed = Number(materialConsumedQty) || 0;
                         if (!selected) return null;
                         if (consumed > selected.quantity) {
@@ -755,7 +851,8 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
                         }
                         return (
                           <p className="text-[1.2rem] text-subtle mt-[0.4rem]">
-                            Disponible: {selected.quantity} → Quedará: {selected.quantity - consumed}
+                            Disponible: {selected.quantity} → Quedará:{' '}
+                            {selected.quantity - consumed}
                           </p>
                         );
                       })()}
@@ -772,7 +869,9 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
               <p className="text-[1.1rem] font-semibold uppercase tracking-widest text-subtle">
                 Etiquetas
               </p>
-              <span className="text-[1.2rem] text-subtle">{form.tags.length}/{MAX_ITEM_TAGS}</span>
+              <span className="text-[1.2rem] text-subtle">
+                {form.tags.length}/{MAX_ITEM_TAGS}
+              </span>
             </div>
             {form.tags.length > 0 && (
               <div className="flex flex-wrap gap-[0.6rem] mb-[1rem]">
@@ -800,7 +899,9 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
                   type="text"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.preventDefault();
+                  }}
                   placeholder="Ej. Marvel, Anime..."
                   className={`flex-1 min-w-0 ${INPUT}`}
                   aria-label="Nueva etiqueta"
@@ -838,42 +939,9 @@ export default function ItemsView({ initialItems, salesStats, warehouseMaterials
               aria-label="Notas del producto"
             />
           </div>
-
         </div>
       </SlideOver>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        title="Eliminar Producto"
-        footer={
-          <>
-            <button
-              type="button"
-              className="button button-muted"
-              onClick={closeDeleteModal}
-              disabled={deleting}
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              className="button button-danger flex items-center gap-[0.6rem]"
-              onClick={handleDeleteConfirm}
-              disabled={deleting}
-            >
-              {deleting && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
-              Eliminar
-            </button>
-          </>
-        }
-      >
-        <p className="text-[1.4rem] text-paragraph">
-          ¿Confirmas que deseas eliminar el producto{' '}
-          <strong>{itemToDelete?.name}</strong>? Esta acción no se puede deshacer.
-        </p>
-      </Modal>
     </div>
+    </>
   );
 }

@@ -15,7 +15,7 @@ import {
   StoreOrderItem,
   StoreOrderUpdateData,
 } from '@/types/inventory';
-import { fromDbMaterialType, fromDbCategory } from '@/lib/utils/inventory';
+import { fromDbMaterialType, fromDbCategory, slugifyItemName } from '@/lib/utils/inventory';
 
 // ─── Prisma payload types ─────────────────────────────────────────────────────
 
@@ -228,6 +228,12 @@ export async function findAllDesigns(): Promise<RawMaterial[]> {
 export async function findDesignById(id: string): Promise<RawMaterial | null> {
   const design = await prisma.rawMaterial.findUnique({ where: { id } });
   return design ? mapToRawMaterial(design) : null;
+}
+
+export async function findDesignBySlug(slug: string): Promise<RawMaterial | null> {
+  const designs = await prisma.rawMaterial.findMany();
+  const match = designs.find((d) => slugifyItemName(d.name) === slug);
+  return match ? mapToRawMaterial(match) : null;
 }
 
 export async function createDesignRecord(data: RawMaterialFormData): Promise<RawMaterial> {

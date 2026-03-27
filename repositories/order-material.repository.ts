@@ -25,6 +25,7 @@ type DbOrder = Prisma.OrderMaterialGetPayload<{
 function mapToOrder(raw: DbOrder): OrderMaterial {
   return {
     id: raw.id,
+    orderNumber: raw.orderNumber,
     distributor: raw.distributor,
     description: raw.description,
     status: raw.status as OrderMaterialStatus,
@@ -57,6 +58,14 @@ export async function findAllOrders(): Promise<OrderMaterial[]> {
 export async function findOrderById(id: string): Promise<OrderMaterial | null> {
   const order = await prisma.orderMaterial.findUnique({
     where: { id },
+    include: orderInclude,
+  });
+  return order ? mapToOrder(order) : null;
+}
+
+export async function findOrderByNumber(orderNumber: number): Promise<OrderMaterial | null> {
+  const order = await prisma.orderMaterial.findUnique({
+    where: { orderNumber },
     include: orderInclude,
   });
   return order ? mapToOrder(order) : null;

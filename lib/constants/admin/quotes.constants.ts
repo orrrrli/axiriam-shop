@@ -1,4 +1,4 @@
-import { QuoteFormData, QuoteStatus } from '@/types/inventory';
+import { QuoteFormData, QuoteStatus, DiscountType } from '@/types/inventory';
 
 /**
  * Display labels for quote status values
@@ -41,6 +41,8 @@ export const QUOTE_COLUMNS = [
 /**
  * Default form values for creating a new quote
  */
+const DEFAULT_DISCOUNT_TYPE: DiscountType = 'percentage';
+
 export const EMPTY_QUOTE_FORM: QuoteFormData = {
   clientName: '',
   clientEmail: undefined,
@@ -49,6 +51,7 @@ export const EMPTY_QUOTE_FORM: QuoteFormData = {
   status: 'draft',
   validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
   discount: 0,
+  discountType: DEFAULT_DISCOUNT_TYPE,
   notes: undefined,
   iva: 16,
   includingIva: true,

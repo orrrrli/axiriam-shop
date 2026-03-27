@@ -19,9 +19,12 @@ import type { Product } from '@/types/product';
 
 interface ProductCardProps {
   product: Partial<Product>;
+  imageClassName?: string;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const DEFAULT_IMAGE_CLASS = 'absolute inset-0 w-full h-[125%] object-contain -translate-y-[12%] transition-transform duration-500 ease-out group-hover:scale-[1.06] drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)]';
+
+const ProductCard: React.FC<ProductCardProps> = ({ product, imageClassName }) => {
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const items = useCartStore((state) => state.items);
@@ -83,8 +86,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           viewTransitionName: isTransitionSource ? transitionNames.card : 'none',
         }}
         className={`
-          group relative flex flex-col rounded-[1.4rem] overflow-hidden bg-white
-          transition-all duration-[350ms] ease-out
+          group relative flex flex-col rounded-[1.4rem] bg-white
+          transition-all duration-[350ms] ease-out z-0 hover:z-10
           ${isEmpty
             ? 'cursor-default border border-[#ebebeb]'
             : `cursor-pointer border
@@ -109,7 +112,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <ImageLoader
               alt={product.name || ''}
               src={product.image}
-              className="w-full h-full object-contain p-[1.8rem] transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+              className={imageClassName ?? DEFAULT_IMAGE_CLASS}
             />
           ) : (
             <div className="w-full h-full"><Skeleton height="100%" /></div>
@@ -117,7 +120,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {/* Hover overlay */}
           {!isEmpty && (
-            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-[0.05] transition-opacity duration-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-[0.05] transition-opacity duration-300 pointer-events-none rounded-t-[1.4rem]" />
           )}
 
           {/* ── Floating CTA pill ── */}
@@ -154,7 +157,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* ── Info ── */}
-        <div className="px-[1.4rem] pt-[1.2rem] pb-[1.4rem] flex flex-col gap-[0.3rem]">
+        <div className="px-[1.4rem] pt-[1.2rem] pb-[1.4rem] flex flex-col gap-[0.3rem] rounded-b-[1.4rem] bg-white border-t border-[#f0f0f0] relative z-10">
           <span className="text-[1.05rem] font-semibold text-[rgba(0,0,0,0.35)] uppercase tracking-[0.08em] [font-family:var(--font-inter)]">
             {product.category || <Skeleton width={60} />}
           </span>

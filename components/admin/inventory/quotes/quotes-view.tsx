@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { sileo } from 'sileo';
 import {
   Plus,
   Pencil,
@@ -10,7 +11,6 @@ import {
   Download,
   Search,
   ChevronDown,
-  Loader2,
 } from 'lucide-react';
 import { Quote, QuoteStatus } from '@/types/inventory';
 import { formatPrice, formatDate } from '@/lib/utils/helpers';
@@ -19,8 +19,8 @@ import {
   QUOTE_STATUS_STYLES,
 } from '@/lib/constants/admin/quotes.constants';
 import { useQuotes } from '@/lib/hooks/use-quotes';
-import { DataTable } from '@/components/admin/common/organisms/data-table';
-import { Modal } from '@/components/admin/common/organisms/modal';
+import { DataTable, Column } from '@/components/admin/common/organisms/data-table';
+import ConfirmToast from '@/components/molecules/confirm-toast';
 
 type SortOrder = 'asc' | 'desc';
 
@@ -28,54 +28,56 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Quote | null>(null);
 
   const {
     filteredQuotes,
-    isSubmitting,
-    handleDeleteConfirm,
+    handleDeleteConfirm: deleteQuoteById,
     handleDownloadPDF,
   } = useQuotes({ initialQuotes, searchQuery, sortOrder });
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
-  async function onDeleteConfirm(): Promise<void> {
-    if (!currentQuote) return;
-    const success = await handleDeleteConfirm(currentQuote.id);
-    if (success) {
-      setIsDeleteModalOpen(false);
-      setCurrentQuote(null);
-    }
-  }
-
   function openDelete(quote: Quote): void {
-    setCurrentQuote(quote);
-    setIsDeleteModalOpen(true);
+    setPendingDelete(quote);
   }
 
-  function closeDelete(): void {
-    setIsDeleteModalOpen(false);
-    setCurrentQuote(null);
+  function handleDeleteCancel(): void {
+    setPendingDelete(null);
+  }
+
+  function handleDeleteConfirm(): void {
+    if (!pendingDelete) return;
+    const quote = pendingDelete;
+    setPendingDelete(null);
+
+    const promise = deleteQuoteById(quote.id).then((success) => {
+      if (!success) throw new Error('Error al eliminar la cotización');
+    });
+
+    sileo.promise(promise, {
+      loading: { title: `Eliminando cotización ${quote.quoteNumber}...` },
+      success: { title: `Cotización ${quote.quoteNumber} eliminada` },
+      error: { title: 'Error al eliminar la cotización' },
+    });
   }
 
   // ─── Table columns ─────────────────────────────────────────────────────────
 
-  const columns = [
+  const columns: Column<Quote>[] = [
     {
       header: '#',
       key: 'quoteNumber',
-      render: (value: string) => (
-        <span className="font-mono text-[1.3rem] font-medium tracking-wide text-subtle">{value}</span>
+      render: (value: unknown) => (
+        <span className="font-mono text-[1.3rem] font-medium tracking-wide text-subtle">{value as string}</span>
       ),
     },
     {
       header: 'Cliente',
       key: 'clientName',
-      render: (value: string, row: Quote) => (
+      render: (value: unknown, row: Quote) => (
         <div>
-          <span className="font-bold text-heading">{value}</span>
+          <span className="font-bold text-heading">{value as string}</span>
           {row.clientCompany && (
             <span className="block text-[1.1rem] text-gray-400 mt-[0.2rem]">
               {row.clientCompany}
@@ -87,32 +89,35 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
     {
       header: 'Estado',
       key: 'status',
-      render: (value: QuoteStatus) => (
-        <span
-          className={`inline-block text-[1.2rem] font-bold px-[1rem] py-[0.3rem] rounded-full ${QUOTE_STATUS_STYLES[value]}`}
-        >
-          {QUOTE_STATUS_LABELS[value]}
-        </span>
-      ),
+      render: (value: unknown) => {
+        const status = value as QuoteStatus;
+        return (
+          <span
+            className={`inline-block text-[1.2rem] font-bold px-[1rem] py-[0.3rem] rounded-full ${QUOTE_STATUS_STYLES[status]}`}
+          >
+            {QUOTE_STATUS_LABELS[status]}
+          </span>
+        );
+      },
     },
     {
       header: 'Válido hasta',
       key: 'validUntil',
-      render: (value: Date) => (
-        <span className="text-[1.3rem]">{formatDate(value)}</span>
+      render: (value: unknown) => (
+        <span className="text-[1.3rem]">{formatDate(value as Date)}</span>
       ),
     },
     {
       header: 'Total',
       key: 'totalAmount',
-      render: (value: number) => (
-        <span className="font-bold text-heading">{formatPrice(value)}</span>
+      render: (value: unknown) => (
+        <span className="font-bold text-heading">{formatPrice(value as number)}</span>
       ),
     },
     {
       header: 'Acciones',
       key: 'id',
-      render: (_: string, row: Quote) => (
+      render: (_: unknown, row: Quote) => (
         <div className="flex items-center gap-[0.8rem]">
           <button
             type="button"
@@ -146,6 +151,15 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
+    <>
+    {pendingDelete && (
+      <ConfirmToast
+        title="Eliminar Cotización"
+        productName={pendingDelete.quoteNumber}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+    )}
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       {/* Header */}
       <div className="flex items-center justify-between mb-[2.4rem]">
@@ -199,38 +213,7 @@ export default function QuotesView({ initialQuotes }: { initialQuotes: Quote[] }
         onRowClick={(item) => router.push(`/admin/inventory/quotes/${item.quoteNumber}`)}
       />
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={closeDelete}
-        title="Eliminar Cotización"
-        footer={
-          <>
-            <button
-              type="button"
-              className="button button-muted"
-              onClick={closeDelete}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              className="button button-danger flex items-center gap-[0.6rem]"
-              onClick={onDeleteConfirm}
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
-              Eliminar
-            </button>
-          </>
-        }
-      >
-        <p className="text-[1.4rem] text-paragraph">
-          ¿Confirmas que deseas eliminar la cotización{' '}
-          <strong>{currentQuote?.quoteNumber}</strong>? Esta acción no se puede deshacer.
-        </p>
-      </Modal>
     </div>
+    </>
   );
 }

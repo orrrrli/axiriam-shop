@@ -185,6 +185,7 @@ enum ParcelService {
 
 model OrderMaterial {
   id             String              @id @default(cuid())
+  orderNumber    Int                 @unique @default(autoincrement())
   distributor    String
   description    String
   status         OrderMaterialStatus @default(pending)

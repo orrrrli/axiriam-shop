@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Search, Bell } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { getDemoSession } from '@/lib/demo-auth';
@@ -8,14 +9,34 @@ import { useEffect, useState } from 'react';
 
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
-function getBreadcrumbs(pathname: string): string[] {
+const SEGMENT_HREF_OVERRIDES: Record<string, string> = {
+  inventory: '/admin/dashboard',
+};
+
+interface Breadcrumb {
+  label: string;
+  href: string | null;
+}
+
+function getBreadcrumbs(pathname: string): Breadcrumb[] {
   const segments = pathname.split('/').filter(Boolean);
-  return segments.slice(1).map((segment) =>
-    segment
+  const displaySegments = segments.slice(1);
+
+  return displaySegments.map((segment, index) => {
+    const label = segment
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-  );
+      .join(' ');
+
+    const isLast = index === displaySegments.length - 1;
+    if (isLast) return { label, href: null };
+
+    const href =
+      SEGMENT_HREF_OVERRIDES[segment] ??
+      '/' + segments.slice(0, index + 2).join('/');
+
+    return { label, href };
+  });
 }
 
 export function AdminNavbar(): React.ReactElement {
@@ -42,11 +63,20 @@ export function AdminNavbar(): React.ReactElement {
           {userInitial}
         </span>
         {breadcrumbs.map((crumb, index) => (
-          <span key={index} className="flex items-center gap-[0.8rem] text-admin-nav-text">
+          <span key={index} className="flex items-center gap-[0.8rem]">
             <span className="text-admin-muted">&gt;</span>
-            <span className={index === breadcrumbs.length - 1 ? 'text-admin-nav-text font-medium' : 'text-admin-muted'}>
-              {crumb}
-            </span>
+            {crumb.href !== null ? (
+              <Link
+                href={crumb.href}
+                className="text-admin-muted hover:text-admin-nav-text transition-colors duration-150"
+              >
+                {crumb.label}
+              </Link>
+            ) : (
+              <span className="text-admin-nav-text font-medium">
+                {crumb.label}
+              </span>
+            )}
           </span>
         ))}
       </div>

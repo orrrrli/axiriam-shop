@@ -173,6 +173,11 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
     if (result.success) {
       setModalOpen(false);
       sileo.success({ title: editingItem ? 'Material actualizado correctamente' : 'Material creado correctamente' });
+      if (editingItem) {
+        setItems((prev) => prev.map((i) => (i.id === editingItem.id ? result.data : i)));
+      } else {
+        setItems((prev) => [...prev, result.data]);
+      }
       router.refresh();
     } else {
       setSaveError(result.error);

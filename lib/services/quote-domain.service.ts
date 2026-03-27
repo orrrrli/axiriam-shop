@@ -13,20 +13,32 @@ interface QuoteTotals {
  */
 export function calculateTotals(formData: QuoteFormData): QuoteTotals {
   const itemsSubtotal = formData.items.reduce((sum: number, item: QuoteItem) => {
-    const itemTotal = item.unitPrice * item.quantity;
-    const itemDiscount = item.discount ? itemTotal * (item.discount / 100) : 0;
-    return sum + (itemTotal - itemDiscount);
+    const discType = item.discountType ?? 'percentage';
+    if (discType === 'percentage') {
+      const itemTotal = item.unitPrice * item.quantity;
+      const itemDiscount = item.discount ? itemTotal * (item.discount / 100) : 0;
+      return sum + (itemTotal - itemDiscount);
+    }
+    return sum + (item.unitPrice - (item.discount ?? 0)) * item.quantity;
   }, 0);
 
   const extrasSubtotal = formData.extras.reduce((sum: number, extra: SaleExtra) => {
     const qty = extra.quantity ?? 1;
-    const extraTotal = extra.price * qty;
-    const extraDiscount = extra.discount ? extraTotal * (extra.discount / 100) : 0;
-    return sum + (extraTotal - extraDiscount);
+    const discType = extra.discountType ?? 'percentage';
+    if (discType === 'percentage') {
+      const extraTotal = extra.price * qty;
+      const extraDiscount = extra.discount ? extraTotal * (extra.discount / 100) : 0;
+      return sum + (extraTotal - extraDiscount);
+    }
+    return sum + (extra.price - (extra.discount ?? 0)) * qty;
   }, 0);
 
   const subtotal = itemsSubtotal + extrasSubtotal;
-  const discountAmount = subtotal * (formData.discount / 100);
+  const globalDiscType = formData.discountType ?? 'percentage';
+  const discountAmount =
+    globalDiscType === 'percentage'
+      ? subtotal * (formData.discount / 100)
+      : formData.discount;
   const afterDiscount = subtotal - discountAmount;
 
   const ivaRate = formData.iva / 100;

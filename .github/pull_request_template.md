@@ -46,6 +46,5 @@ Agrega capturas si hay cambios visuales en la UI.
 - [ ] Los cambios en base de datos incluyen su migración de Prisma
 - [ ] No se exponen credenciales ni secrets en el código
 - [ ] La funcionalidad fue probada en el entorno beta
-```
 
 ---

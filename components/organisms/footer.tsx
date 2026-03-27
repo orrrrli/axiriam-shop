@@ -12,7 +12,7 @@ const Footer = () => {
   if (!visiblePaths.includes(pathname)) return null;
 
   return (
-    <footer className="relative px-[5.6rem] mt-[4.8rem] bg-off-white flex items-center justify-between max-md:px-0 max-md:pt-[2.5rem] max-md:flex-col max-md:text-center">
+    <footer className="relative px-[5.6rem] bg-off-white flex items-center justify-between max-md:px-0 max-md:pt-[2.5rem] max-md:flex-col max-md:text-center">
       <div className="basis-[40%] max-md:basis-auto max-md:order-1 max-md:w-full max-md:my-[1.2rem]">
         <strong>
           <span className="text-paragraph text-[1.2rem]">

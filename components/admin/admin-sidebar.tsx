@@ -36,6 +36,7 @@ export default function AdminSidebar(): React.ReactElement {
   const router = useRouter();
   const { data: session } = useSession();
   const [demoUser, setDemoUser] = useState<{ name?: string; email?: string } | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (DEMO_MODE) {
@@ -45,15 +46,47 @@ export default function AdminSidebar(): React.ReactElement {
   }, []);
 
   const handleSignOut = (): void => {
+    setSigningOut(true);
     if (DEMO_MODE) {
-      demoSignOut();
-      setDemoUser(null);
-      router.push('/');
-      router.refresh();
+      setTimeout(() => {
+        demoSignOut();
+        setDemoUser(null);
+        router.push('/');
+        router.refresh();
+      }, 1800);
     } else {
-      signOut({ callbackUrl: '/' });
+      setTimeout(() => {
+        signOut({ callbackUrl: '/' });
+      }, 1800);
     }
   };
+
+  if (signingOut) {
+    return (
+      <div
+        style={{
+          position: 'fixed', inset: 0, background: '#101010',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2.4rem',
+          animation: 'fadeIn 0.4s ease forwards', zIndex: 9999,
+        }}
+      >
+        <span style={{ fontFamily: 'var(--font-montserrat)', fontSize: '2.4rem', fontWeight: 700, letterSpacing: '0.16em', color: 'white' }}>
+          AXIRIAM
+        </span>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontFamily: 'var(--font-montserrat)', fontSize: '1.8rem', fontWeight: 700, color: 'white', margin: 0 }}>
+            Hasta pronto
+          </p>
+          <p style={{ fontFamily: 'var(--font-geist)', fontSize: '1.3rem', color: 'rgba(255,255,255,0.45)', marginTop: '6px' }}>
+            Cerrando sesión...
+          </p>
+        </div>
+        <div style={{ width: '120px', height: '2px', background: 'rgba(255,255,255,0.12)', borderRadius: '9999px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: 'white', borderRadius: '9999px', animation: 'fullWidth 1.8s ease forwards' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <aside className="w-[24rem] shrink-0 h-full bg-admin-sidebar border-r border-border flex flex-col">

@@ -85,8 +85,8 @@ export default function WarehouseDetail({ material }: { material: RawMaterial })
                 <Image src={material.imageUrl} alt={material.name} fill className="object-cover" />
               </div>
             ) : (
-              <div className="w-full aspect-square flex items-center justify-center bg-[#f5f7fa]">
-                <ImageIcon className="w-[6rem] h-[6rem] text-gray-200" />
+              <div className="w-full aspect-square flex items-center justify-center bg-[#e2e5ea]">
+                <ImageIcon className="w-[6rem] h-[6rem] text-gray-400" />
               </div>
             )}
           </div>

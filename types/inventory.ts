@@ -73,6 +73,7 @@ export interface OrderMaterialGroup {
 
 export interface OrderMaterial {
   id: string;
+  orderNumber: number;
   materials: OrderMaterialGroup[];
   distributor: string;
   description: string;

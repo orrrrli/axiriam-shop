@@ -5,12 +5,13 @@ import { createPortal } from 'react-dom';
 import { Trash2 } from 'lucide-react';
 
 interface ConfirmToastProps {
+  title?: string;
   productName: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export default function ConfirmToast({ productName, onConfirm, onCancel }: ConfirmToastProps): React.ReactElement | null {
+export default function ConfirmToast({ title = 'Eliminar producto', productName, onConfirm, onCancel }: ConfirmToastProps): React.ReactElement | null {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -73,7 +74,7 @@ export default function ConfirmToast({ productName, onConfirm, onCancel }: Confi
             <Trash2 style={{ width: 14, height: 14, color: '#f87171' }} />
           </div>
           <span style={{ color: '#f87171', fontSize: '1.5rem', fontWeight: 600, fontFamily: 'var(--font-fustat), sans-serif' }}>
-            Eliminar producto
+            {title}
           </span>
         </div>
 
@@ -93,14 +94,14 @@ export default function ConfirmToast({ productName, onConfirm, onCancel }: Confi
               onClick={handleCancel}
               style={{
                 flex: 1,
-                background: 'rgba(255,255,255,0.08)',
+                background: '#ffffff',
                 border: 'none',
                 borderRadius: '9999px',
                 padding: '0.8rem 0',
                 fontSize: '1.3rem',
-                fontWeight: 500,
+                fontWeight: 600,
                 cursor: 'pointer',
-                color: 'rgba(255,255,255,0.75)',
+                color: '#1a1a1a',
                 fontFamily: 'inherit',
               }}
             >
@@ -111,14 +112,14 @@ export default function ConfirmToast({ productName, onConfirm, onCancel }: Confi
               onClick={onConfirm}
               style={{
                 flex: 1,
-                background: '#ef4444',
-                border: 'none',
+                background: 'transparent',
+                border: '1.5px solid #f87171',
                 borderRadius: '9999px',
                 padding: '0.8rem 0',
                 fontSize: '1.3rem',
-                fontWeight: 600,
+                fontWeight: 500,
                 cursor: 'pointer',
-                color: '#ffffff',
+                color: '#f87171',
                 fontFamily: 'inherit',
               }}
             >

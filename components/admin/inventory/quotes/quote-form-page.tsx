@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { sileo } from 'sileo';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Quote, QuoteFormData } from '@/types/inventory';
 import { useQuoteForm } from '@/lib/hooks/use-quote-form';
@@ -20,6 +21,7 @@ function toFormData(quote: Quote): QuoteFormData {
     status: quote.status,
     validUntil: quote.validUntil,
     discount: quote.discount,
+    discountType: quote.discountType,
     notes: quote.notes,
     iva: quote.iva,
     includingIva: quote.includingIva,
@@ -42,8 +44,14 @@ export default function QuoteFormPage({ quote }: QuoteFormPageProps): React.Reac
       : await submitCreate(data);
 
     if (result.success) {
+      sileo.success({
+        title: isEdit ? 'Cotización actualizada correctamente' : 'Cotización creada correctamente',
+      });
       router.push('/admin/inventory/quotes');
     } else {
+      sileo.error({
+        title: isEdit ? 'Error al actualizar la cotización' : 'Error al crear la cotización',
+      });
       setError(result.error);
     }
   }

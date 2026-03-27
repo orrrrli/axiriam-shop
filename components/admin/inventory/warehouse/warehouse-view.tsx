@@ -7,12 +7,18 @@ import { Plus, Warehouse, Loader2, AlertCircle, Image as ImageIcon, Pencil, Tras
 import { useCloudinaryUpload } from '@/lib/hooks/use-cloudinary-upload';
 import { RawMaterial, RawMaterialFormData, MaterialType } from '@/types/inventory';
 import { WAREHOUSE_TYPE_LABELS, EMPTY_WAREHOUSE_FORM } from '@/lib/constants/admin/warehouse.constants';
+import { slugifyItemName } from '@/lib/utils/inventory';
 import { useWarehouseMutations } from '@/lib/hooks/use-warehouse-mutations';
-import { Modal, DataTable } from '@/components/admin/common';
+import { useOrderMutations } from '@/lib/hooks/use-order-mutations';
+import { sileo } from 'sileo';
+import { Modal, DataTable, Column } from '@/components/admin/common';
+import ConfirmToast from '@/components/molecules/confirm-toast';
+import AlertToast from '@/components/molecules/alert-toast';
 
 export default function WarehouseView({ initialMaterials }: { initialMaterials: RawMaterial[] }): React.ReactElement {
   const router = useRouter();
-  const { saving, deleting, create, update, remove } = useWarehouseMutations();
+  const { saving, create, update, remove } = useWarehouseMutations();
+  const { createFromWarehouse } = useOrderMutations();
   const [items, setItems] = useState(initialMaterials);
 
   // ── Form modal ───────────────────────────────────────────────────────────────
@@ -22,10 +28,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // ── Delete modal ─────────────────────────────────────────────────────────────
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<RawMaterial | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  // ── Delete confirm ────────────────────────────────────────────────────────────
+  const [pendingDelete, setPendingDelete] = useState<RawMaterial | null>(null);
+  const [blockedDelete, setBlockedDelete] = useState<RawMaterial | null>(null);
 
   // ── Order generation ──────────────────────────────────────────────────────────
   const [selectionMode, setSelectionMode] = useState(false);
@@ -86,24 +91,14 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
         })),
       }],
     };
-    try {
-      const res = await fetch('/api/admin/inventory/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json() as { error?: string };
-        setOrderError(err.error ?? 'Error al crear el pedido');
-      } else {
-        setOrderModalOpen(false);
-        exitSelectionMode();
-        router.push('/admin/inventory/orders');
-      }
-    } catch {
-      setOrderError('Error de red');
-    } finally {
-      setOrderSaving(false);
+    const result = await createFromWarehouse(payload);
+    setOrderSaving(false);
+    if (result.success) {
+      setOrderModalOpen(false);
+      exitSelectionMode();
+      router.push('/admin/inventory/orders');
+    } else {
+      setOrderError(result.error ?? 'Error al crear el pedido');
     }
   }
 
@@ -169,84 +164,105 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
 
     if (result.success) {
       setModalOpen(false);
+      sileo.success({ title: editingItem ? 'Material actualizado correctamente' : 'Material creado correctamente' });
+      if (editingItem) {
+        setItems((prev) => prev.map((i) => (i.id === editingItem.id ? result.data : i)));
+      } else {
+        setItems((prev) => [...prev, result.data]);
+      }
       router.refresh();
     } else {
       setSaveError(result.error);
+      sileo.error({ title: editingItem ? 'Error al actualizar el material' : 'Error al crear el material' });
     }
   }
 
   // ── Delete handlers ──────────────────────────────────────────────────────────
-  function openDeleteModal(item: RawMaterial): void {
-    setItemToDelete(item);
-    setIsDeleteModalOpen(true);
+  function handleDelete(item: RawMaterial): void {
+    setPendingDelete(item);
   }
 
-  function closeDeleteModal(): void {
-    setIsDeleteModalOpen(false);
-    setItemToDelete(null);
-    setDeleteError(null);
+  function handleDeleteCancel(): void {
+    setPendingDelete(null);
   }
 
-  async function handleDeleteConfirm(): Promise<void> {
-    if (!itemToDelete) return;
-    setDeleteError(null);
-    const result = await remove(itemToDelete.id);
-    if (result.success) {
-      setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
-      closeDeleteModal();
-    } else {
-      setDeleteError(result.error);
-    }
+  function handleDeleteConfirm(): void {
+    if (!pendingDelete) return;
+    const item = pendingDelete;
+    setPendingDelete(null);
+
+    const promise = remove(item.id).then((result) => {
+      if (!result.success) {
+        if (result.code === 'MATERIAL_IN_USE') {
+          setBlockedDelete(item);
+          throw new Error('MATERIAL_IN_USE');
+        }
+        throw new Error(result.error ?? 'Error al eliminar');
+      }
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      return result;
+    });
+
+    sileo.promise(promise, {
+      loading: { title: `Eliminando "${item.name}"...` },
+      success: { title: `"${item.name}" eliminado correctamente` },
+      error: (err: unknown) => {
+        if (err instanceof Error && err.message === 'MATERIAL_IN_USE') return { duration: 0 };
+        return { title: 'Error al eliminar el material' };
+      },
+    });
   }
 
   // ── Table columns ────────────────────────────────────────────────────────────
-  const columns = [
+  const columns: Column<RawMaterial>[] = [
     {
       header: 'Foto',
       key: 'imageUrl',
-      render: (value: string | undefined, row: RawMaterial) =>
-        value ? (
-          <Image src={value} alt={row.name} width={50} height={50} className="object-cover rounded" />
+      render: (value: unknown, row: RawMaterial) => {
+        const url = value as string | undefined;
+        return url ? (
+          <Image src={url} alt={row.name} width={50} height={50} className="object-cover rounded" />
         ) : (
           <ImageIcon className="w-[3rem] h-[3rem] text-subtle opacity-30" />
-        ),
+        );
+      },
     },
     {
       header: 'Nombre',
       key: 'name',
-      render: (value: string) => <span className="font-bold text-heading">{value}</span>,
+      render: (value: unknown) => <span className="font-bold text-heading">{value as string}</span>,
     },
     {
       header: 'Tipo',
       key: 'type',
-      render: (value: string) => WAREHOUSE_TYPE_LABELS[value] ?? value,
+      render: (value: unknown) => WAREHOUSE_TYPE_LABELS[value as string] ?? (value as string),
     },
     {
       header: 'Dimensiones',
       key: 'width',
-      render: (_: number, row: RawMaterial) => (
+      render: (_: unknown, row: RawMaterial) => (
         <span className="text-paragraph">{row.width} × {row.height} m</span>
       ),
     },
     {
       header: 'Rendimiento',
       key: 'quantity',
-      render: (value: number) => (
+      render: (value: unknown) => (
         <span className="text-paragraph">
-          {value} <span className="text-subtle text-[1.2rem]">items</span>
+          {value as number} <span className="text-subtle text-[1.2rem]">items</span>
         </span>
       ),
     },
     {
       header: 'Precio',
       key: 'price',
-      render: (value: number) => <span className="font-bold text-heading">${value.toFixed(2)}</span>,
+      render: (value: unknown) => <span className="font-bold text-heading">${(value as number).toFixed(2)}</span>,
     },
     { header: 'Proveedor', key: 'supplier' },
     {
       header: 'Acciones',
       key: 'id',
-      render: (_: string, row: RawMaterial) => (
+      render: (_: unknown, row: RawMaterial) => (
         <div className="flex items-center gap-[0.4rem]" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
@@ -258,7 +274,7 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
           </button>
           <button
             type="button"
-            onClick={() => openDeleteModal(row)}
+            onClick={() => handleDelete(row)}
             className="p-[0.8rem] text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-[0.6rem] transition-colors duration-150"
             aria-label="Eliminar"
           >
@@ -298,7 +314,7 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
         data={items}
         emptyMessage="No hay materiales registrados"
         emptyIcon={<Warehouse className="w-[3rem] h-[3rem] opacity-30" />}
-        onRowClick={!selectionMode ? (item) => router.push(`/admin/inventory/warehouse/${item.id}`) : undefined}
+        onRowClick={!selectionMode ? (item) => router.push(`/admin/inventory/warehouse/${slugifyItemName(item.name)}`) : undefined}
         selectionMode={selectionMode}
         selectedIds={selectedIds}
         onToggleSelect={toggleSelect}
@@ -709,44 +725,21 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
         </div>
       )}
 
-      {/* ── Delete Confirmation Modal ────────────────────────────────────────── */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        title="Eliminar Material"
-        footer={
-          <>
-            <button
-              type="button"
-              className="button button-muted"
-              onClick={closeDeleteModal}
-              disabled={deleting}
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              className="button button-danger flex items-center gap-[0.6rem]"
-              onClick={handleDeleteConfirm}
-              disabled={deleting}
-            >
-              {deleting && <Loader2 className="w-[1.4rem] h-[1.4rem] animate-spin" />}
-              Eliminar
-            </button>
-          </>
-        }
-      >
-        <p className="text-[1.4rem] text-paragraph">
-          ¿Confirmas que deseas eliminar el material{' '}
-          <strong>{itemToDelete?.name}</strong>? Esta acción no se puede deshacer.
-        </p>
-        {deleteError && (
-          <p className="flex items-center gap-[0.6rem] text-[1.2rem] text-red-500 mt-[1.2rem]">
-            <AlertCircle className="w-[1.4rem] h-[1.4rem] shrink-0" />
-            {deleteError}
-          </p>
-        )}
-      </Modal>
+      {pendingDelete && (
+        <ConfirmToast
+          title="Eliminar del almacén"
+          productName={pendingDelete.name}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
+      )}
+      {blockedDelete && (
+        <AlertToast
+          title="No se puede eliminar"
+          message={`El material "${blockedDelete.name}" está vinculado a uno o más productos activos. Primero desvincula los productos desde la sección de Productos.`}
+          onClose={() => setBlockedDelete(null)}
+        />
+      )}
     </div>
   );
 }

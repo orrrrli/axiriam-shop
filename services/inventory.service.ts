@@ -30,6 +30,7 @@ import {
   findItemsSalesStats,
   findAllDesigns,
   findDesignById,
+  findDesignBySlug,
   createDesignRecord,
   updateDesignRecord,
   deleteDesignRecord,
@@ -48,6 +49,7 @@ import {
 import {
   findAllOrders,
   findOrderById,
+  findOrderByNumber,
   createOrderRecord,
   updateOrderRecord,
   deleteOrderRecord,
@@ -140,6 +142,10 @@ export async function getDesignById(id: string): Promise<RawMaterial | null> {
   return findDesignById(id);
 }
 
+export async function getDesignBySlug(slug: string): Promise<RawMaterial | null> {
+  return findDesignBySlug(slug);
+}
+
 export async function createDesign(data: RawMaterialFormData): Promise<RawMaterial> {
   return createDesignRecord(data);
 }
@@ -167,6 +173,10 @@ export async function getOrders(): Promise<OrderMaterial[]> {
 
 export async function getOrderById(id: string): Promise<OrderMaterial | null> {
   return findOrderById(id);
+}
+
+export async function getOrderByNumber(orderNumber: number): Promise<OrderMaterial | null> {
+  return findOrderByNumber(orderNumber);
 }
 
 export async function createOrder(data: OrderMaterialFormData): Promise<OrderMaterial> {

@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import { QuoteFormData } from '@/types/inventory';
-import { createQuote, updateQuote } from '@/lib/services/admin/quotes.service';
-import { buildCreatePayload, buildUpdatePayload } from '@/lib/services/quote-domain.service';
-import { ServiceResult } from '@/lib/services/admin/types';
+import { createQuote, updateQuote } from '@/services/admin/quotes.service';
+import { buildCreatePayload, buildUpdatePayload } from '@/lib/utils/quote';
+import { ServiceResult } from '@/services/admin/types';
 
 interface UseQuoteFormReturn {
   isSubmitting: boolean;

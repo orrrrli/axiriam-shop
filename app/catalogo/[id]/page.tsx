@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Navbar from '@/components/organisms/navbar';
 import Footer from '@/components/organisms/footer';
 import ProductDetail from '@/components/organisms/product-detail';
-import { getProductById } from '@/lib/services/admin/catalog.service';
+import { getProductById } from '@/services/admin/catalog.service';
 
 interface Props {
   params: Promise<{ id: string }>;

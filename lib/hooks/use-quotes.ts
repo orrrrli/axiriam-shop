@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { sileo } from 'sileo';
 import { Quote, QuoteFormData } from '@/types/inventory';
 import {
   createQuote,
   updateQuote,
   deleteQuote,
-} from '@/lib/services/admin/quotes.service';
-import { buildCreatePayload, buildUpdatePayload } from '@/lib/services/quote-domain.service';
+} from '@/services/admin/quotes.service';
+import { buildCreatePayload, buildUpdatePayload } from '@/lib/utils/quote';
 import { generateQuotePDFFromFormData, generateQuotePDFFromQuote } from '@/lib/pdf/quote-pdf';
 
 type SortOrder = 'asc' | 'desc';
@@ -69,7 +70,6 @@ export function useQuotes({
         setQuotes((prev) => [result.data, ...prev]);
         return true;
       }
-      alert(result.error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -87,7 +87,6 @@ export function useQuotes({
         );
         return true;
       }
-      alert(result.error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -102,7 +101,6 @@ export function useQuotes({
         setQuotes((prev) => prev.filter((q) => q.id !== id));
         return true;
       }
-      alert(result.error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -113,7 +111,7 @@ export function useQuotes({
     try {
       generateQuotePDFFromFormData(data);
     } catch {
-      alert('La generación de PDF aún no está implementada');
+      sileo.error({ title: 'Error al generar el PDF' });
     }
   }, []);
 
@@ -121,7 +119,7 @@ export function useQuotes({
     try {
       generateQuotePDFFromQuote(quote);
     } catch {
-      alert('La descarga de PDF aún no está implementada');
+      sileo.error({ title: 'Error al descargar el PDF' });
     }
   }, []);
 

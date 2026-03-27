@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getDesigns } from '@/lib/services/inventory.service';
+import { getDesigns } from '@/services/inventory.service';
 import WarehouseView from '@/components/admin/inventory/warehouse/warehouse-view';
 
 export default async function WarehousePage() {

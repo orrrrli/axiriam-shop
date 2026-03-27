@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Sale, SaleFormData, SaleStatus } from '@/types/inventory';
-import { updateSale } from '@/lib/services/admin/sales.service';
+import { updateSale } from '@/services/admin/sales.service';
 
 interface UseSaleMutationsReturn {
   updating: boolean;

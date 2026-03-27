@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
-import { Tajawal, Poppins, Inter, Montserrat, Geist, Source_Sans_3, Karla } from 'next/font/google';
+import { Tajawal, Poppins, Inter, Montserrat, Geist, Source_Sans_3, Karla, Fustat } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import ToastProvider from '@/components/providers/toast-provider';
@@ -23,7 +23,7 @@ const poppins = Poppins({
 
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700'],
   variable: '--font-inter',
   display: 'swap',
 });
@@ -56,6 +56,13 @@ const geist = Geist({
   display: 'swap',
 });
 
+const fustat = Fustat({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-fustat',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'Axiriam | Gorros Quirúrgicos',
   description: 'Gorros quirúrgicos de alta calidad con diseños únicos para profesionales de la salud.',
@@ -74,7 +81,7 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
       </head>
-      <body className={`${tajawal.variable} ${poppins.variable} ${inter.variable} ${montserrat.variable} ${geist.variable} ${sourceSansPro.variable} ${karla.variable} font-sans`}>
+      <body className={`${tajawal.variable} ${poppins.variable} ${inter.variable} ${montserrat.variable} ${geist.variable} ${sourceSansPro.variable} ${karla.variable} ${fustat.variable} font-sans`}>
         <AuthProvider>
           <BasketProvider>
             <ToastProvider />

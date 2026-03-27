@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getItemBySlug } from '@/lib/services/inventory.service';
+import { getItemBySlug } from '@/services/inventory.service';
 import ItemDetail from '@/components/admin/inventory/items/item-detail';
 import type { InventoryItem } from '@/types/inventory';
 

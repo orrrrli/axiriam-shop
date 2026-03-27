@@ -53,8 +53,8 @@ export async function deleteWarehouseMaterial(id: string): Promise<ServiceResult
     });
 
     if (!res.ok) {
-      const error = await res.json();
-      return { success: false, error: error.error || 'Failed to delete material' };
+      const error = await res.json() as { error?: string; code?: string };
+      return { success: false, error: error.error ?? 'Failed to delete material', code: error.code };
     }
 
     return { success: true, data: undefined };

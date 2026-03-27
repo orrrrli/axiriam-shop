@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getSaleById, getItems } from '@/lib/services/inventory.service';
+import { getSaleById, getItems } from '@/services/inventory.service';
 import SaleDetail from '@/components/admin/inventory/sales/sale-detail';
 import type { InventoryItem, Sale } from '@/types/inventory';
 

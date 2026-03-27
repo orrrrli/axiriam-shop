@@ -51,6 +51,6 @@ export async function findProductById(id: string): Promise<Product | null> {
   } catch {
     // DB unavailable — fall through to mock
   }
-  const mock = mockProducts.find((p) => p._id === id || p.id === id);
+  const mock = mockProducts.find((p) => p._id === id);
   return mock ? (mock as unknown as Product) : null;
 }

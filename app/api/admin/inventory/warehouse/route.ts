@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getDesigns, createDesign } from '@/lib/services/inventory.service';
+import { getDesigns, createDesign } from '@/services/inventory.service';
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);

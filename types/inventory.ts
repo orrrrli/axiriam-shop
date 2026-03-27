@@ -73,6 +73,7 @@ export interface OrderMaterialGroup {
 
 export interface OrderMaterial {
   id: string;
+  orderNumber: number;
   materials: OrderMaterialGroup[];
   distributor: string;
   description: string;
@@ -83,7 +84,7 @@ export interface OrderMaterial {
   updatedAt: Date;
 }
 
-export type OrderMaterialFormData = Omit<OrderMaterial, 'id' | 'createdAt' | 'updatedAt'>;
+export type OrderMaterialFormData = Omit<OrderMaterial, 'id' | 'createdAt' | 'updatedAt' | 'orderNumber'>;
 
 // ─── ENVIOS (Sales) ───────────────────────────────────────
 
@@ -106,6 +107,7 @@ export interface SaleExtra {
   price: number;
   quantity?: number;
   discount?: number;
+  discountType?: DiscountType;
 }
 
 export interface Sale {
@@ -191,6 +193,7 @@ export interface StoreOrderUpdateData {
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
 export type PaymentMethod = 'Efectivo' | 'Tarjeta de crédito' | 'Transferencia' | 'Deposito';
 export type IvaRate = 8 | 16;
+export type DiscountType = 'percentage' | 'amount';
 
 export interface QuoteItem {
   itemId: string;
@@ -198,6 +201,7 @@ export interface QuoteItem {
   unitPrice: number;
   description?: string;
   discount?: number;
+  discountType?: DiscountType;
   manualName?: string;
   manualCategory?: string;
   manualType?: string;
@@ -214,6 +218,7 @@ export interface Quote {
   validUntil: Date;
   subtotal: number;
   discount: number;
+  discountType?: DiscountType;
   totalAmount: number;
   notes?: string;
   iva: IvaRate;

@@ -1,7 +1,7 @@
 import { ActionButtons } from '../molecules/action-buttons';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface Column<T = any> {
+export interface Column<T = any> {
   header: string;
   key: string;
   render?: (value: unknown, row: T) => React.ReactNode;

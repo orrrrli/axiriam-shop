@@ -18,6 +18,7 @@ export type ServiceResponse<T> = {
 export type ServiceError = {
   success: false;
   error: string;
+  code?: string;
 };
 
 /**

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getItems, createItem, InventoryError } from '@/lib/services/inventory.service';
+import { getItems, createItem, InventoryError } from '@/services/inventory.service';
 import { validateItemBody } from '@/lib/utils/inventory';
 import type { ItemCreatePayload } from '@/types/inventory';
 

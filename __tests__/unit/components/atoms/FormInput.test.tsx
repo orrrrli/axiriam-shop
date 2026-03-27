@@ -49,7 +49,7 @@ describe('FormInput Component', () => {
     expect(input).toHaveClass('text-[1.4rem]');
     expect(input).toHaveClass('text-heading');
     expect(input).toHaveClass('focus:outline-none');
-    expect(input).toHaveClass('focus:border-border-focus');
+    expect(input).toHaveClass('focus:border-admin-active-border');
   });
 
   it('should have disabled styling classes when disabled', () => {

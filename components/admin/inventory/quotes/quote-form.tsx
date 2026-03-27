@@ -9,14 +9,16 @@ import {
   QuoteStatus,
   PaymentMethod,
   IvaRate,
+  DiscountType,
 } from '@/types/inventory';
-import { calculateTotals } from '@/lib/utils/quote';
+import { calculateTotals, calcItemSubtotal, calcExtraSubtotal } from '@/lib/utils/quote';
 import { QUOTE_STATUS_LABELS, EMPTY_QUOTE_FORM } from '@/lib/constants/admin/quotes.constants';
 import { formatPrice } from '@/lib/utils/helpers';
 import { FormField } from '@/components/admin/common/molecules/form-field';
 import { FormInput } from '@/components/admin/common/atoms/form-input';
 import { FormTextarea } from '@/components/admin/common/atoms/form-textarea';
 import { Button } from '@/components/admin/common/atoms/button';
+import { DiscountInput } from '@/components/admin/common/molecules/discount-input';
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -46,6 +48,7 @@ interface QuoteFormProps {
   isSubmitting?: boolean;
 }
 
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function toDateInputValue(date: Date | string): string {
@@ -54,25 +57,13 @@ function toDateInputValue(date: Date | string): string {
 }
 
 function emptyItem(): QuoteItem {
-  return { itemId: '', manualName: '', quantity: 1, unitPrice: 0, discount: 0 };
+  return { itemId: '', manualName: '', quantity: 1, unitPrice: 0, discount: 0, discountType: 'percentage' };
 }
 
 function emptyExtra(): SaleExtra {
-  return { description: '', price: 0, quantity: 1, discount: 0 };
+  return { description: '', price: 0, quantity: 1, discount: 0, discountType: 'percentage' };
 }
 
-function itemSubtotal(item: QuoteItem): number {
-  const total = item.unitPrice * item.quantity;
-  const disc = item.discount ? total * (item.discount / 100) : 0;
-  return total - disc;
-}
-
-function extraSubtotal(extra: SaleExtra): number {
-  const qty = extra.quantity ?? 1;
-  const total = extra.price * qty;
-  const disc = extra.discount ? total * (extra.discount / 100) : 0;
-  return total - disc;
-}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -294,7 +285,7 @@ export default function QuoteForm({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[38%]">
+                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[30%]">
                     Descripción
                   </th>
                   <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[12%]">
@@ -303,8 +294,8 @@ export default function QuoteForm({
                   <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[18%]">
                     Precio Unit.
                   </th>
-                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[12%]">
-                    Desc. %
+                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[20%]">
+                    Desc.
                   </th>
                   <th className="text-right py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[16%]">
                     Subtotal
@@ -355,23 +346,17 @@ export default function QuoteForm({
                       />
                     </td>
                     <td className="py-[0.8rem] px-[0.4rem]">
-                      <input
-                        type="number"
-                        className={CELL_INPUT}
-                        value={item.discount ?? ''}
-                        onChange={(e) =>
-                          updateItem(idx, { discount: Number(e.target.value) || 0 })
-                        }
-                        min={0}
-                        max={100}
-                        placeholder="0"
-                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                        aria-label={`Artículo ${idx + 1} descuento`}
+                      <DiscountInput
+                        value={item.discount ?? 0}
+                        type={item.discountType ?? 'percentage'}
+                        maxAmount={item.unitPrice}
+                        onChange={(val, type) => updateItem(idx, { discount: val, discountType: type })}
+                        ariaLabel={`Artículo ${idx + 1} descuento`}
                       />
                     </td>
                     <td className="py-[0.8rem] px-[0.8rem] text-right">
                       <span className="text-[1.3rem] font-medium text-heading">
-                        {formatPrice(itemSubtotal(item))}
+                        {formatPrice(calcItemSubtotal(item))}
                       </span>
                     </td>
                     <td className="py-[0.8rem] px-[0.4rem]">
@@ -395,9 +380,7 @@ export default function QuoteForm({
       {/* ── EXTRAS ────────────────────────────────────────────────────────────── */}
       <section className="bg-white border border-border rounded-[0.8rem] p-[2.4rem]">
         <div className="flex items-center justify-between mb-[1.6rem]">
-          <h3 className="text-[1.5rem] font-semibold text-heading">
-            Extras / Servicios adicionales
-          </h3>
+          <h3 className="text-[1.5rem] font-semibold text-heading">Extras / Servicios adicionales</h3>
           <button
             type="button"
             onClick={addExtra}
@@ -416,7 +399,7 @@ export default function QuoteForm({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[38%]">
+                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[30%]">
                     Descripción
                   </th>
                   <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[18%]">
@@ -425,8 +408,8 @@ export default function QuoteForm({
                   <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[12%]">
                     Cant.
                   </th>
-                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[12%]">
-                    Desc. %
+                  <th className="text-left py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[20%]">
+                    Desc.
                   </th>
                   <th className="text-right py-[0.8rem] px-[0.8rem] text-[1.1rem] text-admin-muted font-semibold uppercase tracking-wide w-[16%]">
                     Subtotal
@@ -477,23 +460,17 @@ export default function QuoteForm({
                       />
                     </td>
                     <td className="py-[0.8rem] px-[0.4rem]">
-                      <input
-                        type="number"
-                        className={CELL_INPUT}
-                        value={extra.discount ?? ''}
-                        onChange={(e) =>
-                          updateExtra(idx, { discount: Number(e.target.value) || 0 })
-                        }
-                        min={0}
-                        max={100}
-                        placeholder="0"
-                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                        aria-label={`Extra ${idx + 1} descuento`}
+                      <DiscountInput
+                        value={extra.discount ?? 0}
+                        type={extra.discountType ?? 'percentage'}
+                        maxAmount={extra.price}
+                        onChange={(val, type) => updateExtra(idx, { discount: val, discountType: type })}
+                        ariaLabel={`Extra ${idx + 1} descuento`}
                       />
                     </td>
                     <td className="py-[0.8rem] px-[0.8rem] text-right">
                       <span className="text-[1.3rem] font-medium text-heading">
-                        {formatPrice(extraSubtotal(extra))}
+                        {formatPrice(calcExtraSubtotal(extra))}
                       </span>
                     </td>
                     <td className="py-[0.8rem] px-[0.4rem]">
@@ -540,32 +517,62 @@ export default function QuoteForm({
               <span className="text-heading">{formatPrice(totals.subtotal)}</span>
             </div>
 
-            {/* Global discount inline */}
-            <div className="flex items-center justify-between gap-[1.6rem]">
+            {/* Global discount */}
+            <div className="flex flex-col gap-[0.8rem]">
+              <div className="flex items-center justify-between">
+                <span className="text-[1.3rem] text-subtle">Descuento global</span>
+                {totals.discountAmount > 0 && (
+                  <span className="text-[1.3rem] text-red-500 font-medium">
+                    -{formatPrice(totals.discountAmount)}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-[1rem]">
-                <span className="text-[1.3rem] text-subtle whitespace-nowrap">Descuento global</span>
-                <div className="relative w-[7rem]">
+                <div className="flex flex-1 rounded-[0.5rem] border border-gray-200 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => { setField('discountType', 'percentage'); setField('discount', 0); }}
+                    className={`flex-1 py-[0.8rem] text-[1.2rem] font-medium text-center leading-none transition-colors duration-150 ${(form.discountType ?? 'percentage') === 'percentage' ? 'bg-blue-500 text-white' : 'bg-white text-subtle hover:bg-gray-50'}`}
+                    aria-label="Descuento global por porcentaje"
+                    aria-pressed={(form.discountType ?? 'percentage') === 'percentage'}
+                  >
+                    % Porcentaje
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setField('discountType', 'amount'); setField('discount', 0); }}
+                    className={`flex-1 py-[0.8rem] text-[1.2rem] font-medium text-center leading-none transition-colors duration-150 border-l border-gray-200 ${form.discountType === 'amount' ? 'bg-blue-500 text-white' : 'bg-white text-subtle hover:bg-gray-50'}`}
+                    aria-label="Descuento global por cantidad"
+                    aria-pressed={form.discountType === 'amount'}
+                  >
+                    $ Cantidad
+                  </button>
+                </div>
+                <div className="relative w-[8rem] shrink-0">
                   <input
                     type="number"
-                    className="w-full bg-[#f5f5f5] border-0 border-b border-gray-300 px-[0.8rem] py-[0.4rem] pr-[2rem] text-[1.3rem] text-heading text-right focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#f5f5f5] border-0 border-b border-gray-300 px-[0.8rem] py-[0.6rem] pr-[2.2rem] text-[1.3rem] text-heading text-right focus:outline-none focus:border-blue-500 transition-colors duration-150"
                     value={form.discount === 0 ? '' : form.discount}
-                    onChange={(e) => setField('discount', Number(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const val = Number(e.target.value) || 0;
+                      const discType: DiscountType = form.discountType ?? 'percentage';
+                      if (discType === 'percentage' && val >= 100) return;
+                      setField('discount', val);
+                    }}
                     min={0}
-                    max={100}
+                    max={(form.discountType ?? 'percentage') === 'percentage' ? 99 : undefined}
+                    step={(form.discountType ?? 'percentage') === 'percentage' ? 1 : 0.01}
                     placeholder="0"
                     onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                    aria-label="Descuento global"
+                    aria-label="Valor de descuento global"
                   />
-                  <span className="absolute right-[0.4rem] top-1/2 -translate-y-1/2 text-[1.2rem] text-subtle pointer-events-none">
-                    %
-                  </span>
+                  {(form.discountType ?? 'percentage') === 'percentage' && (
+                    <span className="absolute right-[0.6rem] top-1/2 -translate-y-1/2 text-[1.2rem] text-subtle pointer-events-none">
+                      %
+                    </span>
+                  )}
                 </div>
               </div>
-              {totals.discountAmount > 0 && (
-                <span className="text-[1.3rem] text-red-500 font-medium">
-                  -{formatPrice(totals.discountAmount)}
-                </span>
-              )}
             </div>
 
             {!form.includingIva && (

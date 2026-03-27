@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import ImageLoader from '@/components/atoms/image-loader';
@@ -9,6 +10,11 @@ import { useRouter } from 'next/navigation';
 import { Check, ShoppingBag, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatPrice } from '@/lib/utils/helpers';
+import {
+  getProductViewTransitionNames,
+  getStartViewTransition,
+  shouldSkipViewTransition,
+} from '@/lib/utils/view-transition';
 import type { Product } from '@/types/product';
 
 interface ProductCardProps {
@@ -23,14 +29,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, imageClassName }) =>
   const addItem = useCartStore((state) => state.addItem);
   const items = useCartStore((state) => state.items);
   const [pressing, setPressing] = useState(false);
+  const [isTransitionSource, setIsTransitionSource] = useState(false);
 
   const productId = product._id || product.id || '';
   const isInBasket = items.some((item) => item.id === productId);
   const isEmpty = !productId;
+  const transitionNames = useMemo(() => getProductViewTransitionNames(productId), [productId]);
 
   const onClickCard = () => {
     if (!productId) return;
-    router.push(`/catalogo/${productId}`);
+
+    const navigate = () => router.push(`/catalogo/${productId}`);
+    const startViewTransition = getStartViewTransition();
+
+    if (!startViewTransition || shouldSkipViewTransition()) {
+      navigate();
+      return;
+    }
+
+    // Usamos flushSync para asegurarnos de que React aplique el view-transition-name
+    // en el DOM *antes* de que startViewTransition capture la foto inicial (old).
+    flushSync(() => {
+      setIsTransitionSource(true);
+    });
+
+    startViewTransition(() => {
+      navigate();
+    });
   };
 
   const handleAddToBasket = (e: React.MouseEvent) => {
@@ -57,6 +82,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, imageClassName }) =>
     <SkeletonTheme baseColor="#ebebeb" highlightColor="#f5f5f5">
       <div
         onClick={onClickCard}
+        style={{
+          viewTransitionName: isTransitionSource ? transitionNames.card : 'none',
+        }}
         className={`
           group relative flex flex-col rounded-[1.4rem] bg-white
           transition-all duration-[350ms] ease-out z-0 hover:z-10
@@ -73,7 +101,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, imageClassName }) =>
         `}
       >
         {/* ── Image area ── */}
-        <div className="relative w-full aspect-square bg-[#f5f5f5] rounded-t-[1.4rem] [clip-path:inset(-20%_0px_0px_0px)]">
+        <div
+          className="relative w-full aspect-square bg-[#f5f5f5] overflow-hidden"
+          style={{
+            viewTransitionName: isTransitionSource ? transitionNames.image : 'none',
+          }}
+        >
 
           {product.image ? (
             <ImageLoader

@@ -34,14 +34,12 @@ export function TransitionLink({
   children,
   onClick,
   ...props
-}: LinkProps & {
-  children: React.ReactNode;
-  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
-  className?: string;
-  style?: React.CSSProperties;
-  onMouseEnter?: React.MouseEventHandler<HTMLAnchorElement>;
-  onMouseLeave?: React.MouseEventHandler<HTMLAnchorElement>;
-}) {
+}: LinkProps &
+  Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps | 'onClick'> & {
+    children: React.ReactNode;
+    onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+    className?: string;
+  }) {
   const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

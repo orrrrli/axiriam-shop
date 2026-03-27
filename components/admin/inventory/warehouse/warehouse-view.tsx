@@ -207,7 +207,7 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
       loading: { title: `Eliminando "${item.name}"...` },
       success: { title: `"${item.name}" eliminado correctamente` },
       error: (err: unknown) => {
-        if (err instanceof Error && err.message === 'MATERIAL_IN_USE') return null;
+        if (err instanceof Error && err.message === 'MATERIAL_IN_USE') return { duration: 0 };
         return { title: 'Error al eliminar el material' };
       },
     });

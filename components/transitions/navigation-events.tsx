@@ -34,14 +34,13 @@ export function TransitionLink({
   children,
   onClick,
   ...props
-}: LinkProps & {
-  children: React.ReactNode;
-  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
-  className?: string;
-  style?: React.CSSProperties;
-  onMouseEnter?: React.MouseEventHandler<HTMLAnchorElement>;
-  onMouseLeave?: React.MouseEventHandler<HTMLAnchorElement>;
-}) {
+}: LinkProps &
+  Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps | 'onClick'> & {
+    children: React.ReactNode;
+    onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+    className?: string;
+  }) {
+  const pathname = usePathname();
   const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -58,6 +57,13 @@ export function TransitionLink({
 
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = (e) => {
     clearTimers();
+
+    const targetHref = typeof props.href === 'string' ? props.href : props.href.pathname ?? '';
+    const isSameRoute = pathname === targetHref || pathname.startsWith(targetHref + '/');
+    if (isSameRoute) {
+      onClick?.(e);
+      return;
+    }
 
     const { startNavigation, showIndicator, cancelNavigation } =
       useTransitionStore.getState();

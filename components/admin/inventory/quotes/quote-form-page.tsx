@@ -21,6 +21,7 @@ function toFormData(quote: Quote): QuoteFormData {
     status: quote.status,
     validUntil: quote.validUntil,
     discount: quote.discount,
+    discountType: quote.discountType,
     notes: quote.notes,
     iva: quote.iva,
     includingIva: quote.includingIva,

@@ -61,7 +61,7 @@ describe('FormTextarea Component', () => {
     expect(textarea).toHaveClass('text-[1.4rem]');
     expect(textarea).toHaveClass('text-heading');
     expect(textarea).toHaveClass('focus:outline-none');
-    expect(textarea).toHaveClass('focus:border-border-focus');
+    expect(textarea).toHaveClass('focus:border-admin-active-border');
     expect(textarea).toHaveClass('resize-vertical');
   });
 

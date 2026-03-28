@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getProducts } from '@/lib/services/admin/catalog.service';
+import { getProducts } from '@/services/admin/catalog.service';
 import CatalogView from '@/components/admin/catalog/catalog-view';
 
 export default async function CatalogoPage(): Promise<React.ReactElement> {

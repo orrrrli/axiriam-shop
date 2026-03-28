@@ -11,7 +11,7 @@ import {
   IvaRate,
   DiscountType,
 } from '@/types/inventory';
-import { calculateTotals } from '@/lib/utils/quote';
+import { calculateTotals, calcItemSubtotal, calcExtraSubtotal } from '@/lib/utils/quote';
 import { QUOTE_STATUS_LABELS, EMPTY_QUOTE_FORM } from '@/lib/constants/admin/quotes.constants';
 import { formatPrice } from '@/lib/utils/helpers';
 import { FormField } from '@/components/admin/common/molecules/form-field';
@@ -64,26 +64,6 @@ function emptyExtra(): SaleExtra {
   return { description: '', price: 0, quantity: 1, discount: 0, discountType: 'percentage' };
 }
 
-function itemSubtotal(item: QuoteItem): number {
-  const discType = item.discountType ?? 'percentage';
-  if (discType === 'percentage') {
-    const total = item.unitPrice * item.quantity;
-    const disc = item.discount ? total * (item.discount / 100) : 0;
-    return total - disc;
-  }
-  return (item.unitPrice - (item.discount ?? 0)) * item.quantity;
-}
-
-function extraSubtotal(extra: SaleExtra): number {
-  const qty = extra.quantity ?? 1;
-  const discType = extra.discountType ?? 'percentage';
-  if (discType === 'percentage') {
-    const total = extra.price * qty;
-    const disc = extra.discount ? total * (extra.discount / 100) : 0;
-    return total - disc;
-  }
-  return (extra.price - (extra.discount ?? 0)) * qty;
-}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -376,7 +356,7 @@ export default function QuoteForm({
                     </td>
                     <td className="py-[0.8rem] px-[0.8rem] text-right">
                       <span className="text-[1.3rem] font-medium text-heading">
-                        {formatPrice(itemSubtotal(item))}
+                        {formatPrice(calcItemSubtotal(item))}
                       </span>
                     </td>
                     <td className="py-[0.8rem] px-[0.4rem]">
@@ -490,7 +470,7 @@ export default function QuoteForm({
                     </td>
                     <td className="py-[0.8rem] px-[0.8rem] text-right">
                       <span className="text-[1.3rem] font-medium text-heading">
-                        {formatPrice(extraSubtotal(extra))}
+                        {formatPrice(calcExtraSubtotal(extra))}
                       </span>
                     </td>
                     <td className="py-[0.8rem] px-[0.4rem]">

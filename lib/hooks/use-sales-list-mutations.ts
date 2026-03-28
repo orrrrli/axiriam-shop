@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { Sale, SaleFormData } from '@/types/inventory';
-import { updateSale, deleteSale } from '@/lib/services/admin/sales.service';
-import { ServiceResult } from '@/lib/services/admin/types';
+import { updateSale, deleteSale } from '@/services/admin/sales.service';
+import { ServiceResult } from '@/services/admin/types';
 
 interface UseSalesListMutationsReturn {
   deleting: boolean;

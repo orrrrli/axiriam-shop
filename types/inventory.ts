@@ -84,7 +84,7 @@ export interface OrderMaterial {
   updatedAt: Date;
 }
 
-export type OrderMaterialFormData = Omit<OrderMaterial, 'id' | 'createdAt' | 'updatedAt'>;
+export type OrderMaterialFormData = Omit<OrderMaterial, 'id' | 'createdAt' | 'updatedAt' | 'orderNumber'>;
 
 // ─── ENVIOS (Sales) ───────────────────────────────────────
 

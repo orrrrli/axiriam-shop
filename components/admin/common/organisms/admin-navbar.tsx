@@ -6,8 +6,9 @@ import { Search, Bell } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { getDemoSession } from '@/lib/demo-auth';
 import { useEffect, useState } from 'react';
+import { env } from '@/lib/env';
 
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+const DEMO_MODE = env.DEMO_MODE;
 
 const SEGMENT_HREF_OVERRIDES: Record<string, string> = {
   inventory: '/admin/dashboard',

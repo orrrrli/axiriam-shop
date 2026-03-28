@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { StoreOrder, StoreOrderUpdateData } from '@/types/inventory';
-import { updateVenta } from '@/lib/services/admin/ventas.service';
-import { ServiceResult } from '@/lib/services/admin/types';
+import { updateVenta } from '@/services/admin/ventas.service';
+import { ServiceResult } from '@/services/admin/types';
 
 interface UseVentasMutationsReturn {
   updating: boolean;

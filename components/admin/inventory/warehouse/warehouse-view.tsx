@@ -3,20 +3,38 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Warehouse, Loader2, AlertCircle, Image as ImageIcon, Pencil, Trash2, ClipboardList } from 'lucide-react';
+import {
+  Plus,
+  Warehouse,
+  Loader2,
+  AlertCircle,
+  Image as ImageIcon,
+  Pencil,
+  Trash2,
+  ClipboardList,
+} from 'lucide-react';
 import { useCloudinaryUpload } from '@/lib/hooks/use-cloudinary-upload';
 import { RawMaterial, RawMaterialFormData, MaterialType } from '@/types/inventory';
-import { WAREHOUSE_TYPE_LABELS, EMPTY_WAREHOUSE_FORM } from '@/lib/constants/admin/warehouse.constants';
+import {
+  WAREHOUSE_TYPE_LABELS,
+  EMPTY_WAREHOUSE_FORM,
+} from '@/lib/constants/admin/warehouse.constants';
 import { slugifyItemName } from '@/lib/utils/inventory';
 import { useWarehouseMutations } from '@/lib/hooks/use-warehouse-mutations';
+import { useOrderMutations } from '@/lib/hooks/use-order-mutations';
 import { sileo } from 'sileo';
 import { Modal, DataTable, Column } from '@/components/admin/common';
 import ConfirmToast from '@/components/molecules/confirm-toast';
 import AlertToast from '@/components/molecules/alert-toast';
 
-export default function WarehouseView({ initialMaterials }: { initialMaterials: RawMaterial[] }): React.ReactElement {
+export default function WarehouseView({
+  initialMaterials,
+}: {
+  initialMaterials: RawMaterial[];
+}): React.ReactElement {
   const router = useRouter();
   const { saving, create, update, remove } = useWarehouseMutations();
+  const { createFromWarehouse } = useOrderMutations();
   const [items, setItems] = useState(initialMaterials);
 
   // ── Form modal ───────────────────────────────────────────────────────────────
@@ -34,7 +52,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [orderModalOpen, setOrderModalOpen] = useState(false);
-  const [orderLines, setOrderLines] = useState<Record<string, { type: MaterialType; quantity: number }>>({});
+  const [orderLines, setOrderLines] = useState<
+    Record<string, { type: MaterialType; quantity: number }>
+  >({});
   const [orderSaving, setOrderSaving] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
 
@@ -57,9 +77,11 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
 
   function openOrderModal(): void {
     const lines: Record<string, { type: MaterialType; quantity: number }> = {};
-    items.filter((m) => selectedIds.has(m.id)).forEach((m) => {
-      lines[m.id] = { type: m.type, quantity: 1 };
-    });
+    items
+      .filter((m) => selectedIds.has(m.id))
+      .forEach((m) => {
+        lines[m.id] = { type: m.type, quantity: 1 };
+      });
     setOrderLines(lines);
     setOrderError(null);
     setOrderModalOpen(true);
@@ -79,34 +101,26 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
       distributor: '',
       description: generateOrderRef(),
       status: 'pending' as const,
-      materials: [{
-        designs: selectedMaterials.map((m) => ({
-          rawMaterialId: m.id,
-          quantity: orderLines[m.id].quantity,
-          type: orderLines[m.id].type,
-          customDesignName: m.name,
-          addToInventory: false,
-        })),
-      }],
+      materials: [
+        {
+          designs: selectedMaterials.map((m) => ({
+            rawMaterialId: m.id,
+            quantity: orderLines[m.id].quantity,
+            type: orderLines[m.id].type,
+            customDesignName: m.name,
+            addToInventory: false,
+          })),
+        },
+      ],
     };
-    try {
-      const res = await fetch('/api/admin/inventory/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json() as { error?: string };
-        setOrderError(err.error ?? 'Error al crear el pedido');
-      } else {
-        setOrderModalOpen(false);
-        exitSelectionMode();
-        router.push('/admin/inventory/orders');
-      }
-    } catch {
-      setOrderError('Error de red');
-    } finally {
-      setOrderSaving(false);
+    const result = await createFromWarehouse(payload);
+    setOrderSaving(false);
+    if (result.success) {
+      setOrderModalOpen(false);
+      exitSelectionMode();
+      router.push('/admin/inventory/orders');
+    } else {
+      setOrderError(result.error ?? 'Error al crear el pedido');
     }
   }
 
@@ -166,13 +180,15 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
 
   async function handleSave(): Promise<void> {
     setSaveError(null);
-    const result = editingItem
-      ? await update(editingItem.id, form)
-      : await create(form);
+    const result = editingItem ? await update(editingItem.id, form) : await create(form);
 
     if (result.success) {
       setModalOpen(false);
-      sileo.success({ title: editingItem ? `"${result.data.name}" actualizado correctamente` : `"${result.data.name}" creado correctamente` });
+      sileo.success({
+        title: editingItem
+          ? `"${result.data.name}" actualizado correctamente`
+          : `"${result.data.name}" creado correctamente`,
+      });
       if (editingItem) {
         setItems((prev) => prev.map((i) => (i.id === editingItem.id ? result.data : i)));
       } else {
@@ -181,7 +197,11 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
       router.refresh();
     } else {
       setSaveError(result.error);
-      sileo.error({ title: editingItem ? `Error al actualizar "${editingItem.name}"` : 'Error al crear el material' });
+      sileo.error({
+        title: editingItem
+          ? `Error al actualizar "${editingItem.name}"`
+          : 'Error al crear el material',
+      });
     }
   }
 
@@ -242,7 +262,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
       header: 'Dimensiones',
       key: 'width',
       render: (_: unknown, row: RawMaterial) => (
-        <span className="text-paragraph">{row.width} × {row.height} m</span>
+        <span className="text-paragraph">
+          {row.width} × {row.height} m
+        </span>
       ),
     },
     {
@@ -257,7 +279,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
     {
       header: 'Precio',
       key: 'price',
-      render: (value: unknown) => <span className="font-bold text-heading">${(value as number).toFixed(2)}</span>,
+      render: (value: unknown) => (
+        <span className="font-bold text-heading">${(value as number).toFixed(2)}</span>
+      ),
     },
     { header: 'Proveedor', key: 'supplier' },
     {
@@ -287,14 +311,17 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
   ];
 
   // ── Shared input class (light mode) ─────────────────────────────────────────
-  const INPUT = 'w-full bg-white border border-border text-heading text-[1.4rem] px-[1.2rem] py-[1rem] rounded-[0.4rem] placeholder-gray-400 focus:outline-none focus:border-admin-active-border transition-colors duration-150';
+  const INPUT =
+    'w-full bg-white border border-border text-heading text-[1.4rem] px-[1.2rem] py-[1rem] rounded-[0.4rem] placeholder-gray-400 focus:outline-none focus:border-admin-active-border transition-colors duration-150';
 
   return (
     <div className="w-full max-w-[120rem] mx-auto px-[3rem] py-[3rem] animate-fade-in max-xs:px-[1.6rem]">
       <div className="flex items-center justify-between mb-[3rem]">
         <div>
           <h1 className="text-heading text-[2.4rem]">Almacén</h1>
-          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">{items.length} materiales registrados</p>
+          <p className="text-subtle text-[1.4rem] mt-[0.4rem]">
+            {items.length} materiales registrados
+          </p>
         </div>
         <div className="flex items-center gap-[1.2rem]">
           <button
@@ -304,7 +331,10 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
           >
             <ClipboardList className="w-[1.6rem] h-[1.6rem]" /> Generar pedido
           </button>
-          <button className="button flex items-center gap-[0.8rem] text-[1.3rem]" onClick={openCreate}>
+          <button
+            className="button flex items-center gap-[0.8rem] text-[1.3rem]"
+            onClick={openCreate}
+          >
             <Plus className="w-[1.6rem] h-[1.6rem]" /> Nuevo Material
           </button>
         </div>
@@ -315,7 +345,11 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
         data={items}
         emptyMessage="No hay materiales registrados"
         emptyIcon={<Warehouse className="w-[3rem] h-[3rem] opacity-30" />}
-        onRowClick={!selectionMode ? (item) => router.push(`/admin/inventory/warehouse/${slugifyItemName(item.name)}`) : undefined}
+        onRowClick={
+          !selectionMode
+            ? (item) => router.push(`/admin/inventory/warehouse/${slugifyItemName(item.name)}`)
+            : undefined
+        }
         selectionMode={selectionMode}
         selectedIds={selectedIds}
         onToggleSelect={toggleSelect}
@@ -325,7 +359,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
       {/* ── Floating selection bar ───────────────────────────────────────────── */}
       <div
         className={`fixed bottom-[3rem] left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 ${
-          selectionMode ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-[1rem] pointer-events-none'
+          selectionMode
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 translate-y-[1rem] pointer-events-none'
         }`}
       >
         <div className="flex items-center gap-[2rem] bg-[#111] text-white px-[2.4rem] py-[1.4rem] rounded-[1.2rem] shadow-2xl">
@@ -379,63 +415,91 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
             </div>
 
             <div className="px-[2.4rem] py-[2rem] flex flex-col gap-[2rem]">
-              {items.filter((m) => selectedIds.has(m.id)).map((m) => (
-                <div key={m.id} className="flex flex-col gap-[1.2rem] pb-[2rem] border-b border-border last:border-b-0 last:pb-0">
-                  <p className="text-[1.4rem] font-semibold text-heading">{m.name}</p>
-                  <div className="grid grid-cols-2 gap-[1.2rem]">
-                    <div>
-                      <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
-                        Tipo <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={orderLines[m.id]?.type ?? m.type}
-                        onChange={(e) => setOrderLines((prev) => ({
-                          ...prev,
-                          [m.id]: { ...prev[m.id], type: e.target.value as MaterialType },
-                        }))}
-                        className={`${INPUT} appearance-none`}
-                      >
-                        {Object.entries(WAREHOUSE_TYPE_LABELS).map(([v, l]) => (
-                          <option key={v} value={v}>{l}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
-                        Unidades <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex items-center">
-                        <button
-                          type="button"
-                          onClick={() => setOrderLines((prev) => ({
-                            ...prev,
-                            [m.id]: { ...prev[m.id], quantity: Math.max(1, prev[m.id].quantity - 1) },
-                          }))}
-                          className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
-                        >−</button>
-                        <input
-                          type="number"
-                          value={orderLines[m.id]?.quantity ?? 1}
-                          onChange={(e) => setOrderLines((prev) => ({
-                            ...prev,
-                            [m.id]: { ...prev[m.id], quantity: Math.max(1, Number(e.target.value) || 1) },
-                          }))}
-                          min={1}
-                          className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setOrderLines((prev) => ({
-                            ...prev,
-                            [m.id]: { ...prev[m.id], quantity: prev[m.id].quantity + 1 },
-                          }))}
-                          className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-r-[0.4rem] hover:bg-body-alt transition-colors duration-150"
-                        >+</button>
+              {items
+                .filter((m) => selectedIds.has(m.id))
+                .map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex flex-col gap-[1.2rem] pb-[2rem] border-b border-border last:border-b-0 last:pb-0"
+                  >
+                    <p className="text-[1.4rem] font-semibold text-heading">{m.name}</p>
+                    <div className="grid grid-cols-2 gap-[1.2rem]">
+                      <div>
+                        <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                          Tipo <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={orderLines[m.id]?.type ?? m.type}
+                          onChange={(e) =>
+                            setOrderLines((prev) => ({
+                              ...prev,
+                              [m.id]: { ...prev[m.id], type: e.target.value as MaterialType },
+                            }))
+                          }
+                          className={`${INPUT} appearance-none`}
+                        >
+                          {Object.entries(WAREHOUSE_TYPE_LABELS).map(([v, l]) => (
+                            <option key={v} value={v}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                          Rendimiento <span className="text-red-500">*</span>
+                          <span className="text-subtle text-[1.1rem] font-normal ml-[0.6rem]">
+                            {m.width} × {m.height} m
+                          </span>
+                        </label>
+                        <div className="flex items-center">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOrderLines((prev) => ({
+                                ...prev,
+                                [m.id]: {
+                                  ...prev[m.id],
+                                  quantity: Math.max(1, prev[m.id].quantity - 1),
+                                },
+                              }))
+                            }
+                            className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={orderLines[m.id]?.quantity ?? 1}
+                            onChange={(e) =>
+                              setOrderLines((prev) => ({
+                                ...prev,
+                                [m.id]: {
+                                  ...prev[m.id],
+                                  quantity: Math.max(1, Number(e.target.value) || 1),
+                                },
+                              }))
+                            }
+                            min={1}
+                            className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOrderLines((prev) => ({
+                                ...prev,
+                                [m.id]: { ...prev[m.id], quantity: prev[m.id].quantity + 1 },
+                              }))
+                            }
+                            className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-r-[0.4rem] hover:bg-body-alt transition-colors duration-150"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
 
             {orderError && (
@@ -516,7 +580,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
                   <div className="flex flex-col items-center gap-[0.8rem]">
                     <ImageIcon className="w-[4rem] h-[4rem] text-gray-300" />
                     <p className="text-[1.3rem] text-subtle">Haz clic para subir una imagen</p>
-                    <p className="text-[1.2rem] text-subtle opacity-60">PNG o JPG · Cuadrada recomendada (1:1)</p>
+                    <p className="text-[1.2rem] text-subtle opacity-60">
+                      PNG o JPG · Cuadrada recomendada (1:1)
+                    </p>
                   </div>
                 )}
               </button>
@@ -571,14 +637,20 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
                 {/* Tipo + Proveedor */}
                 <div className="grid grid-cols-2 gap-[1.2rem]">
                   <div>
-                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">Tipo</label>
+                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                      Tipo
+                    </label>
                     <select
                       value={form.type}
-                      onChange={(e) => setForm({ ...form, type: e.target.value as RawMaterialFormData['type'] })}
+                      onChange={(e) =>
+                        setForm({ ...form, type: e.target.value as RawMaterialFormData['type'] })
+                      }
                       className={`${INPUT} appearance-none`}
                     >
                       {Object.entries(WAREHOUSE_TYPE_LABELS).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
+                        <option key={v} value={v}>
+                          {l}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -607,13 +679,22 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
                 {/* Precio / Ancho / Alto */}
                 <div className="grid grid-cols-3 gap-[1.2rem]">
                   <div>
-                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">Precio</label>
+                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                      Precio
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.4rem] pointer-events-none">$</span>
+                      <span className="absolute left-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.4rem] pointer-events-none">
+                        $
+                      </span>
                       <input
                         type="number"
                         value={form.price === 0 ? '' : form.price}
-                        onChange={(e) => setForm({ ...form, price: e.target.value === '' ? 0 : Number(e.target.value) })}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            price: e.target.value === '' ? 0 : Number(e.target.value),
+                          })
+                        }
                         min={0}
                         step={0.01}
                         placeholder="0.00"
@@ -623,33 +704,51 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">Ancho</label>
+                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                      Ancho
+                    </label>
                     <div className="relative">
                       <input
                         type="number"
                         value={form.width === 0 ? '' : form.width}
-                        onChange={(e) => setForm({ ...form, width: e.target.value === '' ? 0 : Number(e.target.value) })}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            width: e.target.value === '' ? 0 : Number(e.target.value),
+                          })
+                        }
                         min={0}
                         step={0.01}
                         placeholder="1.50"
                         className={`${INPUT} pr-[2.8rem]`}
                       />
-                      <span className="absolute right-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.3rem] pointer-events-none">m</span>
+                      <span className="absolute right-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.3rem] pointer-events-none">
+                        m
+                      </span>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">Alto</label>
+                    <label className="block text-[1.3rem] font-medium text-heading mb-[0.6rem]">
+                      Alto
+                    </label>
                     <div className="relative">
                       <input
                         type="number"
                         value={form.height === 0 ? '' : form.height}
-                        onChange={(e) => setForm({ ...form, height: e.target.value === '' ? 0 : Number(e.target.value) })}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            height: e.target.value === '' ? 0 : Number(e.target.value),
+                          })
+                        }
                         min={0}
                         step={0.01}
                         placeholder="2.00"
                         className={`${INPUT} pr-[2.8rem]`}
                       />
-                      <span className="absolute right-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.3rem] pointer-events-none">m</span>
+                      <span className="absolute right-[1rem] top-1/2 -translate-y-1/2 text-subtle text-[1.3rem] pointer-events-none">
+                        m
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -663,7 +762,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
                     <div className="flex items-center">
                       <button
                         type="button"
-                        onClick={() => setForm({ ...form, quantity: Math.max(0, form.quantity - 1) })}
+                        onClick={() =>
+                          setForm({ ...form, quantity: Math.max(0, form.quantity - 1) })
+                        }
                         className="w-[3.6rem] h-[3.6rem] bg-white border border-border text-heading text-[1.8rem] flex items-center justify-center rounded-l-[0.4rem] hover:bg-body-alt transition-colors duration-150"
                         aria-label="Disminuir rendimiento"
                       >
@@ -672,7 +773,9 @@ export default function WarehouseView({ initialMaterials }: { initialMaterials: 
                       <input
                         type="number"
                         value={form.quantity}
-                        onChange={(e) => setForm({ ...form, quantity: Math.max(0, Number(e.target.value) || 0) })}
+                        onChange={(e) =>
+                          setForm({ ...form, quantity: Math.max(0, Number(e.target.value) || 0) })
+                        }
                         min={0}
                         className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
                       />

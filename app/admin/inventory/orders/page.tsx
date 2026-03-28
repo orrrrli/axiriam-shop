@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getOrders } from '@/lib/services/inventory.service';
+import { getOrders } from '@/services/inventory.service';
 import OrdersView from '@/components/admin/inventory/orders/orders-view';
 
 export default async function OrdersPage() {

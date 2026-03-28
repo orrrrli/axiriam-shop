@@ -6,8 +6,8 @@ import {
   createItem,
   updateItem,
   deleteItem,
-} from '@/lib/services/admin/items.service';
-import { ServiceResult } from '@/lib/services/admin/types';
+} from '@/services/admin/items.service';
+import { ServiceResult } from '@/services/admin/types';
 
 interface UseItemMutationsReturn {
   saving: boolean;

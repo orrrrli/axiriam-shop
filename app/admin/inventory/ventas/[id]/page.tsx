@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getStoreOrderById } from '@/lib/services/inventory.service';
+import { getStoreOrderById } from '@/services/inventory.service';
 import VentaDetail from '@/components/admin/inventory/ventas/venta-detail';
 
 export default async function VentaDetailPage({

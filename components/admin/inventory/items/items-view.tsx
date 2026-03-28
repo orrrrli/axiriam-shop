@@ -30,7 +30,7 @@ import { slugifyItemName } from '@/lib/utils/inventory';
 import { useTransitionStore } from '@/lib/store/transitionStore';
 import { useCloudinaryUpload } from '@/lib/hooks/use-cloudinary-upload';
 import { useItemMutations } from '@/lib/hooks/use-item-mutations';
-import { updateWarehouseMaterial } from '@/lib/services/admin/warehouse.service';
+import { useWarehouseMutations } from '@/lib/hooks/use-warehouse-mutations';
 import {
   CATEGORY_LABELS,
   TYPE_LABELS,
@@ -67,6 +67,7 @@ export default function ItemsView({
   const router = useRouter();
   const startItemDetailNavigation = useTransitionStore((s) => s.startItemDetailNavigation);
   const { saving, create, update, remove } = useItemMutations();
+  const { update: updateWarehouseMaterial } = useWarehouseMutations();
 
   const [items, setItems] = useState<InventoryItem[]>(initialItems);
 
@@ -710,7 +711,7 @@ export default function ItemsView({
                           })
                         }
                         min={0}
-                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         aria-label="Cantidad completo"
                       />
                       <button
@@ -757,7 +758,7 @@ export default function ItemsView({
                         })
                       }
                       min={0}
-                      className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                      className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       aria-label="Cantidad sencillo"
                     />
                     <button
@@ -890,7 +891,7 @@ export default function ItemsView({
                             )
                           }
                           min={1}
-                          className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                          className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <button
                           type="button"
@@ -1078,7 +1079,7 @@ export default function ItemsView({
                         }}
                         min={0}
                         max={rendimiento}
-                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
                         type="button"
@@ -1114,7 +1115,7 @@ export default function ItemsView({
                         }}
                         min={0}
                         max={rendimiento}
-                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none"
+                        className="w-[5rem] h-[3.6rem] bg-white border-y border-border text-heading text-[1.4rem] text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
                         type="button"

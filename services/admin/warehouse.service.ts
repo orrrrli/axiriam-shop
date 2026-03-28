@@ -16,7 +16,7 @@ export async function createWarehouseMaterial(
       return { success: false, error: error.message || 'Failed to create material' };
     }
 
-    const material = await res.json();
+    const { material } = await res.json() as { material: RawMaterial };
     return { success: true, data: material };
   } catch {
     return { success: false, error: 'Network error occurred' };
@@ -39,7 +39,7 @@ export async function updateWarehouseMaterial(
       return { success: false, error: error.message || 'Failed to update material' };
     }
 
-    const material = await res.json();
+    const { material } = await res.json() as { material: RawMaterial };
     return { success: true, data: material };
   } catch {
     return { success: false, error: 'Network error occurred' };

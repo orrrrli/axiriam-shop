@@ -12,10 +12,12 @@ import {
   User,
   CalendarDays,
   FileText,
+  Link2,
 } from 'lucide-react';
-import { RawMaterial } from '@/types/inventory';
-import { formatDate } from '@/lib/utils/helpers';
+import { RawMaterial, InventoryItem } from '@/types/inventory';
+import { formatDate, formatPrice } from '@/lib/utils/helpers';
 import { WAREHOUSE_TYPE_LABELS } from '@/lib/constants/admin/warehouse.constants';
+import { slugifyItemName } from '@/lib/utils/inventory';
 
 function InfoCard({
   icon,
@@ -49,7 +51,12 @@ function SectionTitle({ children }: { children: React.ReactNode }): React.ReactE
   );
 }
 
-export default function WarehouseDetail({ material }: { material: RawMaterial }): React.ReactElement {
+interface WarehouseDetailProps {
+  material: RawMaterial;
+  linkedItems: InventoryItem[];
+}
+
+export default function WarehouseDetail({ material, linkedItems }: WarehouseDetailProps): React.ReactElement {
   const router = useRouter();
 
   return (
@@ -165,6 +172,48 @@ export default function WarehouseDetail({ material }: { material: RawMaterial })
               <p className="text-[1.4rem] text-paragraph leading-relaxed">{material.description}</p>
             </div>
           )}
+
+          {/* Linked products */}
+          <div className="bg-white border border-gray-100 rounded-[1.2rem] p-[2rem]">
+            <SectionTitle>
+              <Link2 className="w-[1.6rem] h-[1.6rem] text-gray-400" />
+              Productos vinculados
+            </SectionTitle>
+            {linkedItems.length === 0 ? (
+              <p className="text-[1.3rem] text-gray-400">Sin productos vinculados a este material.</p>
+            ) : (
+              <div className="flex flex-col gap-[0.8rem]">
+                {linkedItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => router.push(`/admin/inventory/items/${slugifyItemName(item.name)}`)}
+                    className="flex items-center gap-[1.2rem] p-[1rem] rounded-[0.8rem] border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-colors duration-150 text-left w-full"
+                  >
+                    {item.photoUrl ? (
+                      <Image
+                        src={item.photoUrl}
+                        alt={item.name}
+                        width={40}
+                        height={40}
+                        className="rounded-[0.4rem] object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="w-[4rem] h-[4rem] rounded-[0.4rem] bg-[#f5f5f5] flex items-center justify-center shrink-0">
+                        <Package className="w-[1.8rem] h-[1.8rem] text-gray-300" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[1.3rem] font-semibold text-heading truncate">{item.name}</p>
+                      <p className="text-[1.2rem] text-gray-400">
+                        {formatPrice(item.price)} · Completo: {item.quantityCompleto} · Sencillo: {item.quantitySencillo}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

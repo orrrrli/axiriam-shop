@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getItemBySlug } from '@/services/inventory.service';
+import { getItemBySlug, getDesignsByIds } from '@/services/inventory.service';
 import ItemDetail from '@/components/admin/inventory/items/item-detail';
 import type { InventoryItem } from '@/types/inventory';
 
@@ -13,5 +13,7 @@ export default async function ItemDetailPage({
 
   if (!item) notFound();
 
-  return <ItemDetail item={item} />;
+  const linkedMaterials = await getDesignsByIds(item.materials);
+
+  return <ItemDetail item={item} linkedMaterials={linkedMaterials} />;
 }

@@ -2,13 +2,16 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Package, Tag, Layers, DollarSign, Calendar, FileText } from 'lucide-react';
-import { InventoryItem } from '@/types/inventory';
+import { ArrowLeft, Package, Tag, Layers, DollarSign, Calendar, FileText, Link2, Ruler } from 'lucide-react';
+import { InventoryItem, RawMaterial } from '@/types/inventory';
 import { CATEGORY_LABELS, TYPE_LABELS } from '@/lib/constants/admin/items.constants';
+import { WAREHOUSE_TYPE_LABELS } from '@/lib/constants/admin/warehouse.constants';
 import { formatPrice, formatDate } from '@/lib/utils/helpers';
+import { slugifyItemName } from '@/lib/utils/inventory';
 
 interface ItemDetailProps {
   item: InventoryItem;
+  linkedMaterials: RawMaterial[];
 }
 
 function InfoCard({
@@ -35,7 +38,7 @@ function InfoCard({
   );
 }
 
-export default function ItemDetail({ item }: ItemDetailProps): React.ReactElement {
+export default function ItemDetail({ item, linkedMaterials }: ItemDetailProps): React.ReactElement {
   const router = useRouter();
 
   const totalStock = item.quantityCompleto + item.quantitySencillo;
@@ -175,6 +178,55 @@ export default function ItemDetail({ item }: ItemDetailProps): React.ReactElemen
               label="Actualizado"
               value={formatDate(item.updatedAt)}
             />
+          </div>
+
+          {/* Linked warehouse materials */}
+          <div className="bg-white border border-gray-100 rounded-[1.2rem] p-[2rem]">
+            <div className="flex items-center gap-[0.8rem] mb-[1.4rem]">
+              <Link2 className="w-[1.6rem] h-[1.6rem] text-gray-400" />
+              <h2 className="text-[1.4rem] font-semibold text-[#101010]">Material de almacén</h2>
+            </div>
+            {linkedMaterials.length === 0 ? (
+              <p className="text-[1.3rem] text-gray-400">Sin material de almacén vinculado.</p>
+            ) : (
+              <div className="flex flex-col gap-[0.8rem]">
+                {linkedMaterials.map((material) => (
+                  <button
+                    key={material.id}
+                    type="button"
+                    onClick={() => router.push(`/admin/inventory/warehouse/${slugifyItemName(material.name)}`)}
+                    className="flex items-center gap-[1.2rem] p-[1rem] rounded-[0.8rem] border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-colors duration-150 text-left w-full"
+                  >
+                    {material.imageUrl ? (
+                      <Image
+                        src={material.imageUrl}
+                        alt={material.name}
+                        width={44}
+                        height={44}
+                        className="rounded-[0.4rem] object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="w-[4.4rem] h-[4.4rem] rounded-[0.4rem] bg-[#f5f5f5] flex items-center justify-center shrink-0">
+                        <Ruler className="w-[1.8rem] h-[1.8rem] text-gray-300" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[1.3rem] font-semibold text-heading truncate">{material.name}</p>
+                      <p className="text-[1.2rem] text-gray-400">
+                        {WAREHOUSE_TYPE_LABELS[material.type] ?? material.type}
+                        {' · '}
+                        {material.width} × {material.height} m
+                        {' · '}
+                        Rendimiento: {material.quantity > 0 ? `${material.quantity} items` : '—'}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[1.3rem] font-semibold text-heading">{formatPrice(material.price)}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

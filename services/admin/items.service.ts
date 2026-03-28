@@ -16,7 +16,7 @@ export async function createItem(
       return { success: false, error: error.error || 'Failed to create item' };
     }
 
-    const item = await res.json();
+    const { item } = await res.json() as { item: InventoryItem };
     return { success: true, data: item };
   } catch {
     return { success: false, error: 'Network error occurred' };
@@ -39,7 +39,7 @@ export async function updateItem(
       return { success: false, error: error.error || 'Failed to update item' };
     }
 
-    const item = await res.json();
+    const { item } = await res.json() as { item: InventoryItem };
     return { success: true, data: item };
   } catch {
     return { success: false, error: 'Network error occurred' };

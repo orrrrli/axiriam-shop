@@ -230,6 +230,12 @@ export async function findDesignById(id: string): Promise<RawMaterial | null> {
   return design ? mapToRawMaterial(design) : null;
 }
 
+export async function findDesignsByIds(ids: string[]): Promise<RawMaterial[]> {
+  if (ids.length === 0) return [];
+  const designs = await prisma.rawMaterial.findMany({ where: { id: { in: ids } } });
+  return designs.map(mapToRawMaterial);
+}
+
 export async function findDesignBySlug(slug: string): Promise<RawMaterial | null> {
   const designs = await prisma.rawMaterial.findMany();
   const match = designs.find((d) => slugifyItemName(d.name) === slug);
@@ -272,6 +278,15 @@ export async function updateDesignRecord(
     },
   });
   return mapToRawMaterial(design);
+}
+
+export async function findItemsByMaterialId(materialId: string): Promise<InventoryItem[]> {
+  const items = await prisma.inventoryItem.findMany({
+    where: { materials: { some: { rawMaterialId: materialId } } },
+    include: itemInclude,
+    orderBy: { createdAt: 'desc' },
+  });
+  return items.map(mapToItem);
 }
 
 export async function countItemsLinkedToMaterial(id: string): Promise<number> {

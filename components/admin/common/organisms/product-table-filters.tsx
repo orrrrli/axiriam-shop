@@ -1,6 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 
-type TabKey = 'general' | 'completos' | 'sencillos' | 'ventas';
+type TabKey = 'general' | 'completos' | 'sencillos';
 type SortKey = 'price-asc' | 'price-desc' | 'date-newest' | 'date-oldest';
 
 interface ProductTableFiltersProps {
@@ -17,7 +17,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'general', label: 'General' },
   { key: 'completos', label: 'Completos' },
   { key: 'sencillos', label: 'Sencillos' },
-  { key: 'ventas', label: 'Ventas' },
 ];
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
@@ -87,23 +86,21 @@ export function ProductTableFilters({
           ))}
         </div>
 
-        {/* Sort dropdown — hidden on ventas tab */}
-        {activeTab !== 'ventas' && (
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => onSortChange(e.target.value as SortKey)}
-              className="appearance-none bg-white border border-gray-200 rounded-[0.8rem] px-[1.4rem] py-[0.7rem] pr-[3.4rem] text-[1.3rem] font-medium text-gray-600 focus:outline-none focus:border-gray-400 cursor-pointer transition-colors duration-150 hover:border-gray-300"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-[1rem] top-1/2 -translate-y-1/2 w-[1.4rem] h-[1.4rem] text-gray-400" />
-          </div>
-        )}
+        {/* Sort dropdown */}
+        <div className="relative">
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value as SortKey)}
+            className="appearance-none bg-white border border-gray-200 rounded-[0.8rem] px-[1.4rem] py-[0.7rem] pr-[3.4rem] text-[1.3rem] font-medium text-gray-600 focus:outline-none focus:border-gray-400 cursor-pointer transition-colors duration-150 hover:border-gray-300"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-[1rem] top-1/2 -translate-y-1/2 w-[1.4rem] h-[1.4rem] text-gray-400" />
+        </div>
       </div>
     </div>
   );

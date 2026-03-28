@@ -245,7 +245,7 @@ const Navbar = (): React.ReactElement | null => {
                   ))}
                 </div>
               )}
-              {mobileNavLink('/studio', 'Estudio', isOnStudio)}
+              {mobileNavLink('/estudio', 'Estudio', isOnStudio)}
               {mobileNavLink('/nosotros', 'Comunidad', isOnAbout)}
 
               {currentSession && (
@@ -411,7 +411,7 @@ const Navbar = (): React.ReactElement | null => {
         </div>
 
         <TransitionLink
-          href="/studio"
+          href="/estudio"
           style={{
             ...navLinkStyle(isOnStudio),
             color: isOnStudio ? '#101010' : 'rgba(0,0,0,0.5)',

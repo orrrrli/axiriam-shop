@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Navbar from '@/components/organisms/navbar';
 import Footer from '@/components/organisms/footer';
 import HeroSection from '@/components/organisms/hero-section';
 import MainSection from '@/components/organisms/main-section';
@@ -38,8 +37,6 @@ const featuredHoverCards = [
 export default function Home() {
   return (
     <main className="content !p-0 !block !min-h-0">
-      <Navbar />
-
       {/* 1 — Hero */}
       <HeroSection />
       {/* 3 — Featured Products */}
@@ -63,9 +60,6 @@ export default function Home() {
       </section>
       {/* 2 — Collections: blocks 1 & 2 (Alpaca Premium + Algodón Pima) */}
       <MainSection slice={[0, 2]} />
-
-
-
       <Footer />
     </main>
   );

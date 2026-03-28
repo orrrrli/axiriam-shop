@@ -12,6 +12,15 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/studio',
+        destination: '/estudio',
+        permanent: true,
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

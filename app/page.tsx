@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Navbar from '@/components/organisms/navbar';
 import Footer from '@/components/organisms/footer';
 import HeroSection from '@/components/organisms/hero-section';
 import MainSection from '@/components/organisms/main-section';
@@ -61,9 +60,6 @@ export default function Home() {
       </section>
       {/* 2 — Collections: blocks 1 & 2 (Alpaca Premium + Algodón Pima) */}
       <MainSection slice={[0, 2]} />
-
-
-
       <Footer />
     </main>
   );

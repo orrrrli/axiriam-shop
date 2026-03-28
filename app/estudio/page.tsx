@@ -7,7 +7,7 @@ import EstudioHistory from '@/components/organisms/estudio/estudio-history';
 import EstudioTestimonials from '@/components/organisms/estudio/estudio-testimonials';
 import EstudioCtaBanner from '@/components/organisms/estudio/estudio-cta-banner';
 import EstudioLinks from '@/components/organisms/estudio/estudio-links';
-import EstudioFooter from '@/components/organisms/estudio/estudio-footer';
+import Footer from '@/components/organisms/footer';
 
 export const metadata = {
   title: 'Estudio — Axiriam',
@@ -26,7 +26,7 @@ export default function EstudioPage() {
       <EstudioTestimonials {...estudioContent.testimonials} />
       <EstudioCtaBanner {...estudioContent.ctaBanner} />
       <EstudioLinks {...estudioContent.links} />
-      <EstudioFooter />
+      <Footer />
     </main>
   );
 }

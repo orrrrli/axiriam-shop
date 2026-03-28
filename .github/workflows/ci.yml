@@ -23,5 +23,5 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: ${{ vars.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           STRIPE_SECRET_KEY: "sk_test_placeholder"

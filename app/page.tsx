@@ -43,7 +43,7 @@ export default function Home() {
       <section className="w-full bg-[#f5f4f2] px-[1.6rem] py-[5rem] md:px-[6rem] md:py-[8rem] lg:px-[10rem]">
         <div className="mx-auto w-full max-w-[120rem]">
           <h2 className="m-0 mb-[2.4rem] text-[2.8rem] font-extrabold leading-[1.05] tracking-[-0.02em] text-[#101010] [font-family:var(--font-montserrat)] md:mb-[3.2rem] md:text-[3.6rem]">
-            Productos Destacados
+            Colecciones destacadas
           </h2>
 
           <div className="grid grid-cols-1 gap-[2rem] md:grid-cols-3 md:gap-[3.6rem]">
